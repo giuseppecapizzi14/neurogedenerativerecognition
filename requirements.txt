@@ -14,6 +14,7 @@ soundfile
 tqdm
 pyyaml
 matplotlib
+seaborn
 joblib
 git+https://github.com/MorenoLaQuatra/yaml_config_override
 gdown
