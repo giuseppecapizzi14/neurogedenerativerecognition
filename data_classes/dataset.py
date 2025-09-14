@@ -112,6 +112,7 @@ class AudioDataset(Dataset[Sample]):
             df = pd.read_csv(labels_path)
             self.audio_files = df['filepath'].tolist()
             self.labels = df['label_id'].tolist()
+            print(f"✅ Preprocessing completato con successo: caricati {len(self.audio_files)} file audio dal file labels esistente.")
         else:
             # Genera labels.csv
             self.audio_files = []
@@ -135,15 +136,20 @@ class AudioDataset(Dataset[Sample]):
                             label_texts.append(label_text)
             
             print(f"Found {len(self.audio_files)} files")
-            print(f"Label distribution: {dict(zip(*np.unique(label_texts, return_counts=True)))}") if label_texts else print("No labels found!")
+            print(f"Label distribution: {dict(zip(*np.unique(label_texts, return_counts=True)))}" if label_texts else "No labels found!")
             
-            # Salva labels.csv
-            df = pd.DataFrame({
-                'filepath': self.audio_files,
-                'label_text': label_texts,
-                'label_id': self.labels
-            })
-            df.to_csv(labels_path, index=False)
+            if len(self.audio_files) > 0:
+                # Salva labels.csv
+                df = pd.DataFrame({
+                    'filepath': self.audio_files,
+                    'label_text': label_texts,
+                    'label_id': self.labels
+                })
+                df.to_csv(labels_path, index=False)
+                print(f"✅ Preprocessing completato con successo: generato file labels.csv con {len(self.audio_files)} file audio.")
+            else:
+                print("❌ Preprocessing fallito: nessun file audio trovato nel dataset.")
+                raise ValueError(f"Nessun file audio trovato nel dataset {self.dataset_name}")
     
     def __len__(self) -> int:
         return len(self.audio_files)

@@ -176,6 +176,9 @@ def train_classical_mlp(cfg, dataset):
     model.eval()
     correct = 0
     total = 0
+    all_predictions = []
+    all_labels = []
+    
     with torch.no_grad():
         for batch_x, batch_y in test_loader:
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
@@ -183,9 +186,17 @@ def train_classical_mlp(cfg, dataset):
             _, predicted = torch.max(outputs.data, 1)
             total += batch_y.size(0)
             correct += (predicted == batch_y).sum().item()
+            
+            # Raccogli predizioni e etichette per il classification report
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(batch_y.cpu().numpy())
     
     accuracy = correct / total
     print(f"MLP Test Accuracy: {accuracy:.4f}")
+    
+    # Stampa classification report
+    print("\nMLP Classification Report:")
+    print(classification_report(all_labels, all_predictions))
     
     return model
 
@@ -254,6 +265,9 @@ def train_transformers_mlp(cfg, dataset):
     mlp_head.eval()
     correct = 0
     total = 0
+    all_predictions = []
+    all_labels = []
+    
     with torch.no_grad():
         for batch in test_loader:
             hf_inputs = batch['hf_inputs']
@@ -266,9 +280,17 @@ def train_transformers_mlp(cfg, dataset):
             _, predicted = torch.max(logits.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            
+            # Raccogli predizioni e etichette per il classification report
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
     
     accuracy = correct / total
     print(f"Transformers+MLP Test Accuracy: {accuracy:.4f}")
+    
+    # Stampa classification report
+    print("\nTransformers+MLP Classification Report:")
+    print(classification_report(all_labels, all_predictions))
     
     return feature_extractor.backbone, mlp_head
 
@@ -371,6 +393,9 @@ if __name__ == "__main__":
         model.eval()
         correct = 0
         total = 0
+        all_predictions = []
+        all_labels = []
+        
         with torch.no_grad():
             for batch in test_loader:
                 waveforms = batch['waveform'].to(device)
@@ -379,9 +404,17 @@ if __name__ == "__main__":
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
+                
+                # Raccogli predizioni e etichette per il classification report
+                all_predictions.extend(predicted.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
         
         accuracy = correct / total
         print(f"CNN Test Accuracy: {accuracy:.4f}")
+        
+        # Stampa classification report
+        print("\nCNN Classification Report:")
+        print(classification_report(all_labels, all_predictions))
         
         # Salva modello
         os.makedirs('checkpoints', exist_ok=True)
