@@ -155,3 +155,5 @@ precedenetemente descritti, quindi eseguendo i passaggi in [`train.py`](train.py
 Dopo l'addestramento il modello risultante verrà salvato nella **checkpoint_dir** specificata,
 pertanto sarà possibile valutarne e testarne le prestazioni successivamente mediante i passaggi in
 [`test.py`](test.py), con i criteri e i metodi di valutazione descritti in [`metrics.py`](metrics.py).
+#   T e s t   p u s h   v e l o c e  
+ 
