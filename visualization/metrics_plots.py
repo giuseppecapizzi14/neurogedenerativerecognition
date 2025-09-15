@@ -38,10 +38,25 @@ class MetricsVisualizer:
         plt.style.use('default')
         sns.set_palette("husl")
     
+    def create_model_directory(self, model_name: str) -> str:
+        """
+        Crea una directory specifica per il modello.
+        
+        Args:
+            model_name: Nome del modello
+            
+        Returns:
+            str: Percorso della directory creata
+        """
+        model_dir = os.path.join(self.save_dir, model_name.lower().replace(' ', '_'))
+        os.makedirs(model_dir, exist_ok=True)
+        return model_dir
+    
     def plot_metrics_comparison(self, 
                               metrics_dict: Dict[str, Dict[str, float]], 
                               title: str = "Confronto Metriche Modelli",
-                              save_name: Optional[str] = None) -> None:
+                              save_name: Optional[str] = None,
+                              model_dir: Optional[str] = None) -> None:
         """
         Crea un grafico a barre per confrontare le metriche di più modelli.
         
@@ -49,6 +64,7 @@ class MetricsVisualizer:
             metrics_dict: Dizionario {nome_modello: {metrica: valore}}
             title: Titolo del grafico
             save_name: Nome del file da salvare (senza estensione)
+            model_dir: Directory specifica del modello (se None usa save_dir)
         """
         # Converti in DataFrame per facilità di plotting
         df = pd.DataFrame(metrics_dict).T
@@ -78,9 +94,10 @@ class MetricsVisualizer:
         
         # Salva il grafico
         if save_name:
-            save_path = os.path.join(self.save_dir, f"{save_name}.png")
+            save_dir = model_dir if model_dir else self.save_dir
+            save_path = os.path.join(save_dir, f"{save_name}.png")
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"📊 Grafico salvato: {save_path}")
+            print(f"[INFO] Grafico salvato: {save_path}")
         
         plt.close()
     
@@ -88,7 +105,8 @@ class MetricsVisualizer:
                           metrics: Dict[str, float],
                           model_name: str = "Modello",
                           title: Optional[str] = None,
-                          save_name: Optional[str] = None) -> None:
+                          save_name: Optional[str] = None,
+                          model_dir: Optional[str] = None) -> None:
         """
         Crea un radar chart per visualizzare le metriche di un singolo modello.
         
@@ -97,6 +115,7 @@ class MetricsVisualizer:
             model_name: Nome del modello
             title: Titolo del grafico
             save_name: Nome del file da salvare (senza estensione)
+            model_dir: Directory specifica del modello (se None usa save_dir)
         """
         # Prepara i dati
         categories = list(metrics.keys())
@@ -141,9 +160,10 @@ class MetricsVisualizer:
         
         # Salva il grafico
         if save_name:
-            save_path = os.path.join(self.save_dir, f"{save_name}.png")
+            save_dir = model_dir if model_dir else self.save_dir
+            save_path = os.path.join(save_dir, f"{save_name}.png")
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"📈 Radar chart salvato: {save_path}")
+            print(f"[INFO] Radar chart salvato: {save_path}")
         
         plt.close()
     
@@ -152,7 +172,8 @@ class MetricsVisualizer:
                             y_pred: List[int],
                             class_names: Optional[List[str]] = None,
                             title: str = "Matrice di Confusione",
-                            save_name: Optional[str] = None) -> None:
+                            save_name: Optional[str] = None,
+                            model_dir: Optional[str] = None) -> None:
         """
         Crea una matrice di confusione.
         
@@ -162,6 +183,7 @@ class MetricsVisualizer:
             class_names: Nomi delle classi
             title: Titolo del grafico
             save_name: Nome del file da salvare (senza estensione)
+            model_dir: Directory specifica del modello (se None usa save_dir)
         """
         # Calcola la matrice di confusione
         cm = confusion_matrix(y_true, y_pred)
@@ -183,9 +205,10 @@ class MetricsVisualizer:
         
         # Salva il grafico
         if save_name:
-            save_path = os.path.join(self.save_dir, f"{save_name}.png")
+            save_dir = model_dir if model_dir else self.save_dir
+            save_path = os.path.join(save_dir, f"{save_name}.png")
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"🎯 Matrice di confusione salvata: {save_path}")
+            print(f"[INFO] Matrice di confusione salvata: {save_path}")
         
         plt.close()
     
@@ -193,7 +216,8 @@ class MetricsVisualizer:
                       y_true: List[int], 
                       y_scores: List[float],
                       title: str = "Curva ROC",
-                      save_name: Optional[str] = None) -> None:
+                      save_name: Optional[str] = None,
+                      model_dir: Optional[str] = None) -> None:
         """
         Crea una curva ROC.
         
@@ -202,6 +226,7 @@ class MetricsVisualizer:
             y_scores: Punteggi di probabilità per la classe positiva
             title: Titolo del grafico
             save_name: Nome del file da salvare (senza estensione)
+            model_dir: Directory specifica del modello (se None usa save_dir)
         """
         # Calcola la curva ROC
         fpr, tpr, _ = roc_curve(y_true, y_scores)
@@ -231,16 +256,18 @@ class MetricsVisualizer:
         
         # Salva il grafico
         if save_name:
-            save_path = os.path.join(self.save_dir, f"{save_name}.png")
+            save_dir = model_dir if model_dir else self.save_dir
+            save_path = os.path.join(save_dir, f"{save_name}.png")
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"📈 Curva ROC salvata: {save_path}")
+            print(f"[INFO] Curva ROC salvata: {save_path}")
         
         plt.close()
     
     def plot_training_history(self, 
                             history: Dict[str, List[float]],
                             title: str = "Storia dell'Addestramento",
-                            save_name: Optional[str] = None) -> None:
+                            save_name: Optional[str] = None,
+                            model_dir: Optional[str] = None) -> None:
         """
         Crea grafici per visualizzare la storia dell'addestramento.
         
@@ -248,6 +275,7 @@ class MetricsVisualizer:
             history: Dizionario con le metriche per epoca {metrica: [valori]}
             title: Titolo del grafico
             save_name: Nome del file da salvare (senza estensione)
+            model_dir: Directory specifica del modello (se None usa save_dir)
         """
         # Numero di metriche
         n_metrics = len(history)
@@ -272,8 +300,9 @@ class MetricsVisualizer:
         
         # Salva il grafico
         if save_name:
-            save_path = os.path.join(self.save_dir, f"{save_name}.png")
+            save_dir = model_dir if model_dir else self.save_dir
+            save_path = os.path.join(save_dir, f"{save_name}.png")
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"📊 Storia addestramento salvata: {save_path}")
+            print(f"[INFO] Storia addestramento salvata: {save_path}")
         
         plt.close()

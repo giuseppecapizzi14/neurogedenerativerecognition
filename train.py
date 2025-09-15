@@ -26,6 +26,7 @@ from model_classes.cnn_model import CNNModel
 from model_classes.mlp import MLP
 from extract_representetion.classical_features import extract_features
 from extract_representetion.transformers_features import TransformersFeatureExtractor
+from save_model_results import save_model_results
 
 
 def train_one_epoch(
@@ -104,19 +105,13 @@ def train_classical_svm(cfg, dataset):
     print("\nSVM Classification Report:")
     print(classification_report(y_test, y_pred))
     
-    # Confusion Matrix
-    cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=['Classe 0', 'Classe 1'], 
-                yticklabels=['Classe 0', 'Classe 1'])
-    plt.title('SVM - Confusion Matrix')
-    plt.ylabel('Etichetta Reale')
-    plt.xlabel('Etichetta Predetta')
-    plt.tight_layout()
-    plt.savefig('svm_confusion_matrix.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    print("✅ Confusion Matrix SVM salvata come 'svm_confusion_matrix.png'")
+    # Salva tutti i grafici usando save_model_results
+    save_model_results(
+        model_name="SVM",
+        y_true=y_test.tolist(),
+        y_pred=y_pred.tolist(),
+        dataset_name=cfg['data']['dataset_name']
+    )
 
     return svm
 
@@ -214,19 +209,13 @@ def train_classical_mlp(cfg, dataset):
     print("\nMLP Classification Report:")
     print(classification_report(all_labels, all_predictions))
     
-    # Confusion Matrix
-    cm = confusion_matrix(all_labels, all_predictions)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Greens', 
-                xticklabels=['Classe 0', 'Classe 1'], 
-                yticklabels=['Classe 0', 'Classe 1'])
-    plt.title('MLP - Confusion Matrix')
-    plt.ylabel('Etichetta Reale')
-    plt.xlabel('Etichetta Predetta')
-    plt.tight_layout()
-    plt.savefig('mlp_confusion_matrix.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    print("✅ Confusion Matrix MLP salvata come 'mlp_confusion_matrix.png'")
+    # Salva tutti i grafici usando save_model_results
+    save_model_results(
+        model_name="MLP",
+        y_true=all_labels,
+        y_pred=all_predictions,
+        dataset_name=cfg['data']['dataset_name']
+    )
 
     return model
 
@@ -333,19 +322,13 @@ def train_transformers_mlp(cfg, dataset):
     print("\nTransformers+MLP Classification Report:")
     print(classification_report(all_labels, all_predictions))
     
-    # Confusion Matrix
-    cm = confusion_matrix(all_labels, all_predictions)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Purples', 
-                xticklabels=['Classe 0', 'Classe 1'], 
-                yticklabels=['Classe 0', 'Classe 1'])
-    plt.title('Transformers+MLP - Confusion Matrix')
-    plt.ylabel('Etichetta Reale')
-    plt.xlabel('Etichetta Predetta')
-    plt.tight_layout()
-    plt.savefig('transformers_mlp_confusion_matrix.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    print("✅ Confusion Matrix Transformers+MLP salvata come 'transformers_mlp_confusion_matrix.png'")
+    # Salva tutti i grafici usando save_model_results
+    save_model_results(
+        model_name=f"Transformers+MLP_{model_name.replace('/', '_')}",
+        y_true=all_labels,
+        y_pred=all_predictions,
+        dataset_name=cfg['data']['dataset_name']
+    )
     
     return feature_extractor.backbone, mlp_head
 
@@ -473,21 +456,15 @@ if __name__ == "__main__":
         print("\nCNN Classification Report:")
         print(classification_report(all_labels, all_predictions))
         
-        # Confusion Matrix
-        cm = confusion_matrix(all_labels, all_predictions)
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Oranges', 
-                    xticklabels=['Classe 0', 'Classe 1'], 
-                    yticklabels=['Classe 0', 'Classe 1'])
-        plt.title('CNN - Confusion Matrix')
-        plt.ylabel('Etichetta Reale')
-        plt.xlabel('Etichetta Predetta')
-        plt.tight_layout()
-        plt.savefig('cnn_confusion_matrix.png', dpi=300, bbox_inches='tight')
-        plt.show()
-        print("✅ Confusion Matrix CNN salvata come 'cnn_confusion_matrix.png'")
-        
-        # Salva modello
+        # Salva tutti i grafici usando save_model_results
+        save_model_results(
+            model_name="CNN",
+            y_true=all_labels,
+            y_pred=all_predictions,
+            dataset_name=cfg['data']['dataset_name']
+        )
+
+        # Salva il modello
         os.makedirs('checkpoints', exist_ok=True)
         torch.save(model.state_dict(), 'checkpoints/cnn_model.pt')
         

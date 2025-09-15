@@ -61,7 +61,7 @@ class AudioDataset(Dataset[Sample]):
         "Neurovoz": {
             "label_dict": {"healthy": 0, "parkinson": 1},
             "file_pattern": ".wav", 
-            "label_extractor": lambda filename: "healthy" if "healthy" in filename else "parkinson"
+            "label_extractor": lambda filepath: "healthy" if os.path.basename(filepath).startswith("HC_") else "parkinson"
         },
         "Addresso": {
             "label_dict": {"healthy": 0, "parkinson": 1},
