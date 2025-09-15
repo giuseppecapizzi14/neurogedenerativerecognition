@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 class MLP(nn.Module):
     """
-    Modello MLP minimale per classificazione.
+    Modello Multi-Layer Perceptron per classificazione
     """
     
     def __init__(self, input_dim: int, num_classes: int, cfg: Dict[str, Any]):
@@ -33,13 +33,4 @@ class MLP(nn.Module):
         self.network = nn.Sequential(*layers)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass.
-        
-        Args:
-            x: Input tensor [batch_size, input_dim]
-        
-        Returns:
-            Output logits [batch_size, num_classes]
-        """
         return self.network(x)

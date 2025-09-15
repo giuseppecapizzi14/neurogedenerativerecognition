@@ -73,9 +73,6 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
             # Crea oggetto Sound per Parselmouth
             sound = parselmouth.Sound(audio, sampling_frequency=sr)
             
-            # Estrai pitch
-            pitch = sound.to_pitch()
-            
             # Calcola jitter e shimmer
             point_process = parselmouth.praat.call(sound, "To PointProcess (periodic, cc)", 75, 600)
             
