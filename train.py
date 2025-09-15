@@ -4,7 +4,7 @@ import yaml
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 import torch
 import torch.utils.data
@@ -16,6 +16,8 @@ from torch.optim.lr_scheduler import LambdaLR, LRScheduler
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 from transformers import AutoModelForAudioClassification
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from config.config import OPTIMIZERS, Config
 from data_classes.dataset import AudioDataset, Sample
@@ -99,9 +101,23 @@ def train_classical_svm(cfg, dataset):
     accuracy = accuracy_score(y_test, y_pred)
     
     print(f"SVM Test Accuracy: {accuracy:.4f}")
-    print("\nClassification Report:")
+    print("\nSVM Classification Report:")
     print(classification_report(y_test, y_pred))
     
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=['Classe 0', 'Classe 1'], 
+                yticklabels=['Classe 0', 'Classe 1'])
+    plt.title('SVM - Confusion Matrix')
+    plt.ylabel('Etichetta Reale')
+    plt.xlabel('Etichetta Predetta')
+    plt.tight_layout()
+    plt.savefig('svm_confusion_matrix.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    print("✅ Confusion Matrix SVM salvata come 'svm_confusion_matrix.png'")
+
     return svm
 
 
@@ -198,6 +214,20 @@ def train_classical_mlp(cfg, dataset):
     print("\nMLP Classification Report:")
     print(classification_report(all_labels, all_predictions))
     
+    # Confusion Matrix
+    cm = confusion_matrix(all_labels, all_predictions)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Greens', 
+                xticklabels=['Classe 0', 'Classe 1'], 
+                yticklabels=['Classe 0', 'Classe 1'])
+    plt.title('MLP - Confusion Matrix')
+    plt.ylabel('Etichetta Reale')
+    plt.xlabel('Etichetta Predetta')
+    plt.tight_layout()
+    plt.savefig('mlp_confusion_matrix.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    print("✅ Confusion Matrix MLP salvata come 'mlp_confusion_matrix.png'")
+
     return model
 
 
@@ -211,6 +241,8 @@ def train_transformers_mlp(cfg, dataset):
     model_name = cfg['features']['transformers']['model_name']
     freeze_backbone = cfg['features']['transformers']['freeze_backbone']
     feature_extractor = TransformersFeatureExtractor(model_name, device, freeze_backbone)
+
+    print("Model:", model_name)
     
     # Crea dataloader
     train_size = int(0.8 * len(dataset))
@@ -228,7 +260,14 @@ def train_transformers_mlp(cfg, dataset):
     embedding_dim = feature_extractor.get_embedding_dim(sample_inputs, pooling)
     
     # Crea MLP head
-    num_classes = len(set([dataset[i]['label'] for i in range(min(100, len(dataset)))]))
+    # Calcola num_classes in modo più robusto
+    unique_labels = set()
+    for i in range(len(dataset)):
+        unique_labels.add(dataset[i]['label'])
+    num_classes = len(unique_labels)
+    print(f"Numero di classi rilevate: {num_classes}")
+    print(f"Classi uniche: {sorted(unique_labels)}")
+    
     mlp_head = MLP(embedding_dim, num_classes, cfg).to(device)
     
     # Training setup
@@ -238,9 +277,10 @@ def train_transformers_mlp(cfg, dataset):
     # Training loop
     mlp_head.train()
     
-    for epoch in range(cfg['training']['epochs']):
+    for epoch in tqdm(range(cfg['training']['epochs']), desc="Training Transformers+MLP"):
         total_loss = 0
-        for batch in train_loader:
+        epoch_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg['training']['epochs']}", leave=False)
+        for batch in epoch_pbar:
             hf_inputs = batch['hf_inputs']
             labels = batch['label'].to(device)
             
@@ -257,6 +297,7 @@ def train_transformers_mlp(cfg, dataset):
             optimizer.step()
             
             total_loss += loss.item()
+            epoch_pbar.set_postfix({'Loss': f'{loss.item():.4f}'})
         
         if (epoch + 1) % 10 == 0:
             print(f"Epoch {epoch+1}/{cfg['training']['epochs']}, Loss: {total_loss/len(train_loader):.4f}")
@@ -291,6 +332,20 @@ def train_transformers_mlp(cfg, dataset):
     # Stampa classification report
     print("\nTransformers+MLP Classification Report:")
     print(classification_report(all_labels, all_predictions))
+    
+    # Confusion Matrix
+    cm = confusion_matrix(all_labels, all_predictions)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Purples', 
+                xticklabels=['Classe 0', 'Classe 1'], 
+                yticklabels=['Classe 0', 'Classe 1'])
+    plt.title('Transformers+MLP - Confusion Matrix')
+    plt.ylabel('Etichetta Reale')
+    plt.xlabel('Etichetta Predetta')
+    plt.tight_layout()
+    plt.savefig('transformers_mlp_confusion_matrix.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    print("✅ Confusion Matrix Transformers+MLP salvata come 'transformers_mlp_confusion_matrix.png'")
     
     return feature_extractor.backbone, mlp_head
 
@@ -372,9 +427,10 @@ if __name__ == "__main__":
         
         # Training loop
         model.train()
-        for epoch in range(cfg['training']['epochs']):
+        for epoch in tqdm(range(cfg['training']['epochs']), desc="Training CNN"):
             total_loss = 0
-            for batch in train_loader:
+            epoch_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg['training']['epochs']}", leave=False)
+            for batch in epoch_pbar:
                 waveforms = batch['waveform'].to(device)
                 labels = batch['label'].to(device)
                 
@@ -385,7 +441,8 @@ if __name__ == "__main__":
                 optimizer.step()
                 
                 total_loss += loss.item()
-            
+                epoch_pbar.set_postfix({'Loss': f'{loss.item():.4f}'})
+
             if (epoch + 1) % 10 == 0:
                 print(f"Epoch {epoch+1}/{cfg['training']['epochs']}, Loss: {total_loss/len(train_loader):.4f}")
         
@@ -415,6 +472,20 @@ if __name__ == "__main__":
         # Stampa classification report
         print("\nCNN Classification Report:")
         print(classification_report(all_labels, all_predictions))
+        
+        # Confusion Matrix
+        cm = confusion_matrix(all_labels, all_predictions)
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Oranges', 
+                    xticklabels=['Classe 0', 'Classe 1'], 
+                    yticklabels=['Classe 0', 'Classe 1'])
+        plt.title('CNN - Confusion Matrix')
+        plt.ylabel('Etichetta Reale')
+        plt.xlabel('Etichetta Predetta')
+        plt.tight_layout()
+        plt.savefig('cnn_confusion_matrix.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        print("✅ Confusion Matrix CNN salvata come 'cnn_confusion_matrix.png'")
         
         # Salva modello
         os.makedirs('checkpoints', exist_ok=True)

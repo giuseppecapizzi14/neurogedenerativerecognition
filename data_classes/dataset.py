@@ -168,7 +168,7 @@ class AudioDataset(Dataset[Sample]):
         sample = {
             "waveform": waveform,
             "label": label,
-            "hf_inputs": None
+            "hf_inputs": {}  # Inizializza come dizionario vuoto invece di None
         }
         
         # Aggiungi inputs per transformers se necessario
