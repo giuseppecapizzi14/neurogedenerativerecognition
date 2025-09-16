@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from typing import TypedDict, Optional, Dict, Any
+from typing import TypedDict, Dict, Any
 
 import torch
 import torch.nn.functional as F
@@ -9,13 +9,11 @@ import torchaudio
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchaudio.transforms import Resample, MelSpectrogram
-from transformers import AutoFeatureExtractor
 
 
 class Sample(TypedDict):
     waveform: Tensor
     label: int
-    hf_inputs: Optional[Dict[str, Any]]
 
 def apply_preprocessing(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> Tensor:
     """Preprocessing unificato: mono -> resample -> normalize -> crop/pad"""
@@ -82,13 +80,7 @@ class AudioDataset(Dataset[Sample]):
         
         self.dataset_config = self.DATASET_CONFIGS[self.dataset_name]
         
-        # Feature extractor per transformers (se necessario)
-        self.feature_extractor = None
-        if cfg['model']['branch'] == 'transformers_mlp':
-            model_name = cfg['features']['transformers']['model_name']
-            self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
-        
-        # MelSpectrogram transform (se necessario)
+        # MelSpectrogram transform (se necessario per CNN)
         self.mel_transform = None
         if cfg['model']['branch'] == 'cnn' and cfg['model']['cnn']['in_type'] == 'spectrogram':
             self.mel_transform = MelSpectrogram(
@@ -161,26 +153,14 @@ class AudioDataset(Dataset[Sample]):
         # Carica audio
         waveform, sample_rate = torchaudio.load(audio_path)
         
-        # Preprocessing unificato
+        # Preprocessing unificato per tutti i modelli
         waveform = apply_preprocessing(waveform, sample_rate, self.cfg)
         
         # Prepara output base
         sample = {
             "waveform": waveform,
-            "label": label,
-            "hf_inputs": {}  # Inizializza come dizionario vuoto invece di None
+            "label": label
         }
-        
-        # Aggiungi inputs per transformers se necessario
-        if self.feature_extractor is not None:
-            # Converti a numpy per feature extractor
-            waveform_np = waveform.squeeze().numpy()
-            hf_inputs = self.feature_extractor(
-                waveform_np, 
-                sampling_rate=self.cfg['data']['target_sr'], 
-                return_tensors="pt"
-            )
-            sample["hf_inputs"] = {k: v.squeeze(0) for k, v in hf_inputs.items()}
         
         # Calcola spettrogramma se necessario per CNN
         if self.mel_transform is not None:

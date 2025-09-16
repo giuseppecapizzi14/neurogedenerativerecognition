@@ -1,55 +1,42 @@
+from transformers import AutoFeatureExtractor, AutoModel
 import torch
-from torch import Tensor
-from transformers import AutoModelForAudioClassification
-from typing import Dict, Any
 
 
-class TransformersFeatureExtractor:
-    """
-    Classe per estrarre features dai modelli transformers pre-addestrati.
-    Gestisce il caricamento del backbone e l'estrazione degli embeddings.
-    """
+class AudioEmbeddings:
+    '''
+    This class is intended to extract embeddings from audio models.
+    It uses Wav2Vec2 as a default model.
+    '''
     
-    def __init__(self, model_name: str, device: torch.device, freeze_backbone: bool = True):
-
-        self.model_name = model_name
+    def __init__(self, model_name, device, sampling_rate=16000):
+        
+        self.processor = AutoFeatureExtractor.from_pretrained(model_name, sampling_rate=sampling_rate)
+        self.model = AutoModel.from_pretrained(model_name)
+        
         self.device = device
-        self.freeze_backbone = freeze_backbone
+        self.model.to(self.device)
         
-        # Carica backbone transformers
-        self.backbone = AutoModelForAudioClassification.from_pretrained(
-            model_name, 
-            output_hidden_states=True,
-            num_labels=2  # placeholder
-        ).to(device)
+        self.model_name = model_name
+        self.sampling_rate = sampling_rate  # Salva sampling_rate per usarlo nel metodo extract
         
-        # Congela backbone se richiesto
-        if freeze_backbone:
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-                
-        self.backbone.eval()
-    
-    def extract_embeddings(self, hf_inputs: Dict[str, Tensor], pooling: str = 'mean') -> Tensor:
-
+        # eval mode
+        self.model.eval()
+        
+    def extract(self, speech):
+        '''
+        Extract embeddings from a speech.
+        
+        Args:
+            speech: Speech to extract embeddings from.
+        
+        Returns:
+            torch.Tensor: Embeddings of the speech.
+        '''
+        
+        inputs = self.processor(speech, return_tensors="pt", padding="longest", sampling_rate=self.sampling_rate)
+        inputs = {name: tensor.to(self.device) for name, tensor in inputs.items()}
+        
         with torch.no_grad():
-            outputs = self.backbone(**hf_inputs)
-            hidden_states = outputs.hidden_states[-1]  # ultimo layer
-            
-            if pooling == 'mean':
-                embeddings = hidden_states.mean(dim=1)
-            else:  # cls
-                embeddings = hidden_states[:, 0]
-                
-        return embeddings
-    
-    def get_embedding_dim(self, sample_inputs: Dict[str, Tensor], pooling: str = 'mean') -> int:
-
-        with torch.no_grad():
-            outputs = self.backbone(**sample_inputs)
-            hidden_states = outputs.hidden_states[-1]
-            
-            if pooling == 'mean':
-                return hidden_states.mean(dim=1).shape[1]
-            else:  # cls
-                return hidden_states[:, 0].shape[1]
+            outputs = self.model(**inputs)
+        
+        return outputs.last_hidden_state.mean(dim=1)

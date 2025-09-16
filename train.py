@@ -24,7 +24,7 @@ from data_classes.dataset import AudioDataset, Sample
 from model_classes.cnn_model import CNNModel
 from model_classes.mlp import MLP
 from extract_representetion.classical_features import extract_features
-from extract_representetion.transformers_features import TransformersFeatureExtractor
+from extract_representetion.transformers_features import AudioEmbeddings
 from save_model_results import save_model_results
 
 
@@ -74,7 +74,13 @@ def train_classical_svm(cfg, dataset):
         model_name="SVM",
         y_true=y_test.tolist(),
         y_pred=y_pred.tolist(),
-        dataset_name=cfg['data']['dataset_name']
+        dataset_name=cfg['data']['dataset_name'],
+        model_config={
+            'C': cfg['model']['svm']['C'],
+            'kernel': cfg['model']['svm']['kernel'],
+            'gamma': cfg['model']['svm']['gamma']
+        },
+        class_names=['healthy', 'parkinson']
     )
 
     return svm
@@ -178,7 +184,15 @@ def train_classical_mlp(cfg, dataset):
         model_name="MLP",
         y_true=all_labels,
         y_pred=all_predictions,
-        dataset_name=cfg['data']['dataset_name']
+        dataset_name=cfg['data']['dataset_name'],
+        model_config={
+            'hidden_layers': cfg['model']['mlp']['hidden'],
+            'dropout': cfg['model']['mlp']['dropout'],
+            'learning_rate': cfg['training']['max_lr'],
+            'epochs': cfg['training']['epochs'],
+            'batch_size': cfg['training']['batch_size']
+        },
+        class_names=['healthy', 'parkinson']
     )
 
     return model
@@ -192,8 +206,8 @@ def train_transformers_mlp(cfg, dataset):
     
     # Inizializza estrattore features transformers
     model_name = cfg['features']['transformers']['model_name']
-    freeze_backbone = cfg['features']['transformers']['freeze_backbone']
-    feature_extractor = TransformersFeatureExtractor(model_name, device, freeze_backbone)
+    sampling_rate = cfg['data']['target_sr']
+    feature_extractor = AudioEmbeddings(model_name, device, sampling_rate)
 
     print("Model:", model_name)
     
@@ -207,20 +221,12 @@ def train_transformers_mlp(cfg, dataset):
     
     # Determina dimensione embedding
     sample_batch = next(iter(train_loader))
-    sample_inputs = sample_batch['hf_inputs']
-    sample_inputs = {k: v.to(device) for k, v in sample_inputs.items()}
-    pooling = cfg['features']['transformers']['pooling']
-    embedding_dim = feature_extractor.get_embedding_dim(sample_inputs, pooling)
+    sample_waveform = sample_batch['waveform'][0].squeeze().numpy()  # Prendi il primo sample del batch
+    sample_embeddings = feature_extractor.extract(sample_waveform)
+    embedding_dim = sample_embeddings.shape[1]
     
     # Crea MLP head
-    # Calcola num_classes in modo più robusto
-    unique_labels = set()
-    for i in range(len(dataset)):
-        unique_labels.add(dataset[i]['label'])
-    num_classes = len(unique_labels)
-    print(f"Numero di classi rilevate: {num_classes}")
-    print(f"Classi uniche: {sorted(unique_labels)}")
-    
+    num_classes = 2  # healthy (0) e parkinson (1)
     mlp_head = MLP(embedding_dim, num_classes, cfg).to(device)
     
     # Training setup
@@ -234,13 +240,20 @@ def train_transformers_mlp(cfg, dataset):
         total_loss = 0
         epoch_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg['training']['epochs']}", leave=False)
         for batch in epoch_pbar:
-            hf_inputs = batch['hf_inputs']
-            labels = batch['label'].to(device)
+            waveforms = batch['waveform']
+            labels = batch['label'].long().to(device)  # Assicura che le labels siano LongTensor
             
-            hf_inputs = {k: v.to(device) for k, v in hf_inputs.items()}
+            # Estrai embeddings per ogni waveform nel batch
+            batch_embeddings = []
+            for waveform in waveforms:
+                waveform_np = waveform.squeeze().numpy()
+                embeddings = feature_extractor.extract(waveform_np)
+                batch_embeddings.append(embeddings)
             
-            # Estrai embeddings
-            embeddings = feature_extractor.extract_embeddings(hf_inputs, pooling)
+            # Stack degli embeddings in un batch tensor
+            embeddings = torch.stack(batch_embeddings).to(device)
+            # Rimuovi la dimensione extra: da [batch, 1, features] a [batch, features]
+            embeddings = embeddings.squeeze(1)
             
             # Forward MLP
             optimizer.zero_grad()
@@ -264,12 +277,21 @@ def train_transformers_mlp(cfg, dataset):
     
     with torch.no_grad():
         for batch in test_loader:
-            hf_inputs = batch['hf_inputs']
-            labels = batch['label'].to(device)
+            waveforms = batch['waveform']
+            labels = batch['label'].long().to(device)  # Assicura che le labels siano LongTensor
             
-            hf_inputs = {k: v.to(device) for k, v in hf_inputs.items()}
+            # Estrai embeddings per ogni waveform nel batch
+            batch_embeddings = []
+            for waveform in waveforms:
+                waveform_np = waveform.squeeze().numpy()
+                embeddings = feature_extractor.extract(waveform_np)
+                batch_embeddings.append(embeddings)
             
-            embeddings = feature_extractor.extract_embeddings(hf_inputs, pooling)
+            # Stack degli embeddings in un batch tensor
+            embeddings = torch.stack(batch_embeddings).to(device)
+            # Rimuovi la dimensione extra: da [batch, 1, features] a [batch, features]
+            embeddings = embeddings.squeeze(1)
+            
             logits = mlp_head(embeddings)
             _, predicted = torch.max(logits.data, 1)
             total += labels.size(0)
@@ -291,10 +313,20 @@ def train_transformers_mlp(cfg, dataset):
         model_name=f"Transformers+MLP_{model_name.replace('/', '_')}",
         y_true=all_labels,
         y_pred=all_predictions,
-        dataset_name=cfg['data']['dataset_name']
+        dataset_name=cfg['data']['dataset_name'],
+        model_config={
+            'transformer_model': cfg['features']['transformers']['model_name'],
+            'hidden_layers': cfg['model']['mlp']['hidden'],
+            'dropout': cfg['model']['mlp']['dropout'],
+            'learning_rate': cfg['training']['max_lr'],
+            'epochs': cfg['training']['epochs'],
+            'batch_size': cfg['training']['batch_size'],
+            'device': cfg['training']['device']
+        },
+        class_names=['healthy', 'parkinson']
     )
     
-    return feature_extractor.backbone, mlp_head
+    return mlp_head
 
 
 if __name__ == "__main__":
@@ -425,7 +457,16 @@ if __name__ == "__main__":
             model_name="CNN",
             y_true=all_labels,
             y_pred=all_predictions,
-            dataset_name=cfg['data']['dataset_name']
+            dataset_name=cfg['data']['dataset_name'],
+            model_config={
+                'in_type': cfg['model']['cnn']['in_type'],
+                'dropout': cfg['model']['dropout'],
+                'learning_rate': cfg['training']['max_lr'],
+                'epochs': cfg['training']['epochs'],
+                'batch_size': cfg['training']['batch_size'],
+                'device': cfg['training']['device']
+            },
+            class_names=['healthy', 'parkinson']
         )
 
         # Salva il modello
@@ -437,7 +478,7 @@ if __name__ == "__main__":
         
         # Salva modelli
         os.makedirs('checkpoints', exist_ok=True)
-        torch.save(model[1].state_dict(), 'checkpoints/transformers_mlp_head.pt')
+        torch.save(model.state_dict(), 'checkpoints/transformers_mlp_head.pt')
         
     else:
         raise ValueError(f"Branch non supportato: {branch}")

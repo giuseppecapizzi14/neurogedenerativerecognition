@@ -13,7 +13,7 @@ data:
 
 model:
   dropout: 0.25
-  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"       # "waveform" | "spectrogram"
   mlp:
@@ -29,6 +29,7 @@ features:
     n_mfcc: 13
     mfcc_delta: true
     energy: true
+    pitch: false
     jitter_shimmer: true
   spectrogram:
     n_mels: 64
@@ -36,7 +37,7 @@ features:
     hop_length: 160
     log: true
   transformers:
-    model_name: "facebook/wav2vec2-base-960h"   # override da CLI
+    model_name: "facebook/hubert-base-ls960"   # override da CLI
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: true
                                                 # Modelli disponibili:
@@ -54,8 +55,6 @@ training:
   max_lr: 0.005
   min_lr: 0.001
   warmup_ratio: 0.3
-  seed: 42
-  device: "cuda"
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"

@@ -1,0 +1,51 @@
+{
+  "model_name": "Transformers+MLP_facebook_wav2vec2-base-960h",
+  "dataset_name": "Ita-PVS",
+  "model_settings": {
+    "transformer_model": "facebook/wav2vec2-base-960h",
+    "hidden_layers": [
+      256,
+      128
+    ],
+    "dropout": 0.3,
+    "learning_rate": 0.005,
+    "epochs": 50,
+    "batch_size": 32,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.8164556962025317,
+    "precision": 0.8162686996547756,
+    "recall": 0.8164556962025317,
+    "f1_score": 0.816329242173573,
+    "sensitivity": 0.8390804597701149,
+    "specificity": 0.7887323943661971
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.8,
+      "recall": 0.7887323943661971,
+      "f1-score": 0.7943262411347518,
+      "support": 71.0
+    },
+    "parkinson": {
+      "precision": 0.8295454545454546,
+      "recall": 0.8390804597701149,
+      "f1-score": 0.8342857142857143,
+      "support": 87.0
+    },
+    "accuracy": 0.8164556962025317,
+    "macro avg": {
+      "precision": 0.8147727272727273,
+      "recall": 0.813906427068156,
+      "f1-score": 0.814305977710233,
+      "support": 158.0
+    },
+    "weighted avg": {
+      "precision": 0.8162686996547756,
+      "recall": 0.8164556962025317,
+      "f1-score": 0.816329242173573,
+      "support": 158.0
+    }
+  }
+}

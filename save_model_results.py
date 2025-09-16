@@ -68,6 +68,7 @@ def save_model_results(model_name: str,
                       y_true: List[int],
                       y_pred: List[int],
                       dataset_name: str,
+                      model_config: Optional[Dict[str, Any]] = None,
                       y_scores: Optional[List[float]] = None,
                       class_names: Optional[List[str]] = None,
                       save_dir: str = "results") -> Dict[str, Any]:
@@ -129,6 +130,7 @@ def save_model_results(model_name: str,
     results_data = {
         'model_name': model_name,
         'dataset_name': dataset_name,
+        'model_settings': model_config if model_config else {},
         'metrics': metrics,
         'classification_report': report
     }
