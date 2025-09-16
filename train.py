@@ -21,48 +21,12 @@ import matplotlib.pyplot as plt
 
 from config.config import OPTIMIZERS, Config
 from data_classes.dataset import AudioDataset, Sample
-from metrics import Metrics, MetricsHistory, compute_metrics, evaluate, print_metrics
 from model_classes.cnn_model import CNNModel
 from model_classes.mlp import MLP
 from extract_representetion.classical_features import extract_features
 from extract_representetion.transformers_features import TransformersFeatureExtractor
 from save_model_results import save_model_results
 
-
-def train_one_epoch(
-    model: Module,
-    dataloader: DataLoader[Sample],
-    loss_criterion: CrossEntropyLoss,
-    scheduler: LRScheduler,
-    device: torch.device
-) -> Metrics:
-    model.train()
-    total_loss = 0.0
-    predictions: list[int] = []
-    references: list[int] = []
-
-    for batch in tqdm(dataloader, desc = "Training"):
-        waveforms: Tensor = batch["waveform"]
-        waveforms = waveforms.to(device)
-
-        labels: Tensor = batch["label"]
-        labels = labels.to(device)
-
-        scheduler.optimizer.zero_grad()
-
-        outputs: Tensor = model(waveforms)
-        loss: Tensor = loss_criterion(outputs, labels)
-        loss.backward() # type: ignore
-        total_loss += loss.item()
-
-        scheduler.optimizer.step()
-        scheduler.step()
-
-        pred = torch.argmax(outputs, dim = 1)
-        predictions.extend(pred.cpu().numpy())
-        references.extend(labels.cpu().numpy())
-
-    return compute_metrics(predictions, references, total_loss, len(dataloader))
 
 def train_classical_svm(cfg, dataset):
     """Training per SVM classico"""

@@ -2,7 +2,7 @@ data:
   train_ratio: 0.85
   test_val_ratio: 0.35
   data_dir: dataset
-  dataset_name: "Neurovoz"     # "Ita-PVS" | "Neurovoz" | "Addresso"
+  dataset_name: "Ita-PVS"     # "Ita-PVS" | "Neurovoz" | "Addresso"
   target_sr: 16000
   mono: true
   normalize: "peak"           # "peak" | "rms"
@@ -13,7 +13,7 @@ data:
 
 model:
   dropout: 0.25
-  branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"       # "waveform" | "spectrogram"
   mlp:
