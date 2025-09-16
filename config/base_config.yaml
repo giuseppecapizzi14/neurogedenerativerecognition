@@ -37,7 +37,7 @@ features:
     hop_length: 160
     log: true
   transformers:
-    model_name: "facebook/hubert-base-ls960"   # override da CLI
+    model_name: "microsoft/wavlm-base-plus"   # override da CLI
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: true
                                                 # Modelli disponibili:
@@ -57,7 +57,7 @@ training:
   warmup_ratio: 0.3
   checkpoint_dir: checkpoints/
   model_name: best_model
-  device: "cuda"              # "cuda" | "mps" | "cpu"
+  device: "mps"              # "cuda" | "mps" | "cpu"
   evaluation_metric: accuracy
   best_metric_lower_is_better: false
   seed: 42

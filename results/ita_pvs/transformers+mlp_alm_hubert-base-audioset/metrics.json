@@ -1,0 +1,51 @@
+{
+  "model_name": "Transformers+MLP_ALM_hubert-base-audioset",
+  "dataset_name": "Ita-PVS",
+  "model_settings": {
+    "transformer_model": "ALM/hubert-base-audioset",
+    "hidden_layers": [
+      256,
+      128
+    ],
+    "dropout": 0.3,
+    "learning_rate": 0.005,
+    "epochs": 50,
+    "batch_size": 32,
+    "device": "mps"
+  },
+  "metrics": {
+    "accuracy": 0.9810126582278481,
+    "precision": 0.9817824153267191,
+    "recall": 0.9810126582278481,
+    "f1_score": 0.981042523375221,
+    "sensitivity": 0.9655172413793104,
+    "specificity": 1.0
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.9594594594594594,
+      "recall": 1.0,
+      "f1-score": 0.9793103448275862,
+      "support": 71.0
+    },
+    "parkinson": {
+      "precision": 1.0,
+      "recall": 0.9655172413793104,
+      "f1-score": 0.9824561403508771,
+      "support": 87.0
+    },
+    "accuracy": 0.9810126582278481,
+    "macro avg": {
+      "precision": 0.9797297297297297,
+      "recall": 0.9827586206896552,
+      "f1-score": 0.9808832425892317,
+      "support": 158.0
+    },
+    "weighted avg": {
+      "precision": 0.9817824153267191,
+      "recall": 0.9810126582278481,
+      "f1-score": 0.981042523375221,
+      "support": 158.0
+    }
+  }
+}
