@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"       # "waveform" | "spectrogram"
   mlp:
-    hidden: [256, 128]                    # Architettura più profonda per 90% accuracy
-    dropout: 0.2                               # Dropout più alto per prevenire overfitting
+    hidden: [512, 256, 128]                 # Architettura più profonda per migliori prestazioni
+    dropout: 0.3                           # Dropout aumentato per prevenire overfitting
   svm:
     kernel: "rbf"
     C: 1.0
@@ -37,11 +37,11 @@ features:
     hop_length: 128                        # Ridotto da 160 per velocità
     log: true
   transformers:
-    model_name: "facebook/wav2vec2-base"   # Modello più leggero per velocità
+    model_name: "facebook/wav2vec2-base-960h"   # Modello più potente per migliori embedding
     pooling: "mean"                             # "cls" | "mean"
-    freeze_backbone: true                       # Congela backbone per velocità
-    max_length: 48000                          # Limita lunghezza input (3s * 16kHz)
-    layer: -2                                  # Usa layer intermedio invece dell'ultimo
+    freeze_backbone: false                      # Unfreeze per fine-tuning completo
+    max_length: 64000                          # Aumentato per catturare più contesto (4s * 16kHz)
+    layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
                                                 # - ALM/wav2vec2-base-audioset
@@ -51,12 +51,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25 # Ridotto per training veloce mantenendo accuracy
-  batch_size: 64                           # Batch size ottimale per transformers+mlp
-  optimizer: adam
-  max_lr: 0.001                            # Learning rate più conservativo per stabilità
-  min_lr: 0.00001                         # Min LR molto basso per fine-tuning preciso
-  warmup_ratio: 0.15                      # Warmup più lungo per convergenza stabile
+  epochs: 35 # Aumentato per permettere convergenza migliore
+  batch_size: 48                           # Ridotto per stabilità e gradiente più preciso
+  optimizer: adamw                         # AdamW per migliore regolarizzazione
+  max_lr: 0.0008                          # LR leggermente ridotto per convergenza stabile
+  min_lr: 0.000008                        # Min LR proporzionalmente ridotto
+  warmup_ratio: 0.18                      # Warmup più lungo per convergenza graduale
+  weight_decay: 0.01                      # Aggiunta regolarizzazione L2
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
@@ -64,6 +65,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.2                     # Validation split standard per monitoraggio accurato
+  validation_split: 0.22                     # Validation split leggermente aumentato per valutazione più robusta
 
 plot: [accuracy, loss]
