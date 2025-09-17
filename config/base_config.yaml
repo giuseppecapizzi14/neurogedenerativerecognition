@@ -51,10 +51,10 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25  # Aumentato per permettere maggiore convergenza
-  batch_size: 64                            # Manteniamo per stabilità
+  epochs: 25  # Ridotto da 25 per velocizzare il training
+  batch_size: 128                          # Aumentato da 64 per sfruttare meglio la GPU
   optimizer: adam
-  max_lr: 0.001                            # Ridotto per convergenza più stabile
+  max_lr: 0.002                            # Aumentato leggermente per convergenza più rapida
   min_lr: 0.0001                          # Min LR più basso per fine-tuning
   warmup_ratio: 0.1                       # Warmup aumentato per stabilità
   checkpoint_dir: checkpoints/
