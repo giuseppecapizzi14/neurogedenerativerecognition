@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"       # "waveform" | "spectrogram"
   mlp:
-    hidden: [128, 64]                          # Ridotto per velocità mantenendo accuracy
-    dropout: 0.2                              # Ridotto dropout per convergenza più veloce
+    hidden: [256, 128]                    # Architettura più profonda per 90% accuracy
+    dropout: 0.2                               # Dropout più alto per prevenire overfitting
   svm:
     kernel: "rbf"
     C: 1.0
@@ -51,12 +51,12 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 15  # Ridotto per training veloce mantenendo accuracy
+  epochs: 25 # Ridotto per training veloce mantenendo accuracy
   batch_size: 64                           # Batch size ottimale per transformers+mlp
   optimizer: adam
-  max_lr: 0.003                            # Learning rate più alto per convergenza rapida
-  min_lr: 0.0001                          # Min LR più basso per fine-tuning
-  warmup_ratio: 0.05                      # Warmup minimo per convergenza immediata
+  max_lr: 0.001                            # Learning rate più conservativo per stabilità
+  min_lr: 0.00001                         # Min LR molto basso per fine-tuning preciso
+  warmup_ratio: 0.15                      # Warmup più lungo per convergenza stabile
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
@@ -64,6 +64,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.15                    # Ridotto per più dati di training
+  validation_split: 0.2                     # Validation split standard per monitoraggio accurato
 
 plot: [accuracy, loss]
