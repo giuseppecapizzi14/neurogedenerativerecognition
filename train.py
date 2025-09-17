@@ -52,20 +52,43 @@ def train_classical_svm(cfg, dataset):
     X = np.array(X)
     y = np.array(y)
     
-    # Split train/test
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=cfg['training']['seed'], stratify=y
+    # Split train/validation/test con validation split dal config
+    validation_split = cfg['training'].get('validation_split', 0.2)
+    test_split = 0.2
+    train_split = 1.0 - validation_split - test_split
+    
+    print(f"📊 Dataset split: Train {train_split:.1%}, Val {validation_split:.1%}, Test {test_split:.1%}")
+    
+    # Prima divisione: train+val vs test
+    X_temp, X_test, y_temp, y_test = train_test_split(
+        X, y, test_size=test_split, random_state=cfg['training']['seed'], stratify=y
     )
+    
+    # Seconda divisione: train vs validation
+    val_size_adjusted = validation_split / (1 - test_split)  # Aggiusta per il subset rimanente
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_temp, y_temp, test_size=val_size_adjusted, random_state=cfg['training']['seed'], stratify=y_temp
+    )
+    
+    print(f"📊 Training con validation loss monitoring")
     
     # Training SVM
     svm = SVC(
         kernel=cfg['model']['svm']['kernel'],
         C=cfg['model']['svm']['C'],
         gamma=cfg['model']['svm']['gamma'],
-        random_state=cfg['training']['seed']
+        random_state=cfg['training']['seed'],
+        probability=True  # Abilita predict_proba per calcolare loss
     )
     
     svm.fit(X_train, y_train)
+    
+    # Validation loss (usando log-loss per SVM con probabilità)
+    from sklearn.metrics import log_loss
+    y_val_proba = svm.predict_proba(X_val)
+    val_loss = log_loss(y_val, y_val_proba)
+    
+    print(f"📊 Validation Loss: {val_loss:.4f}")
     
     # Evaluation
     y_pred = svm.predict(X_test)
@@ -84,7 +107,8 @@ def train_classical_svm(cfg, dataset):
         model_config={
             'C': cfg['model']['svm']['C'],
             'kernel': cfg['model']['svm']['kernel'],
-            'gamma': cfg['model']['svm']['gamma']
+            'gamma': cfg['model']['svm']['gamma'],
+            'validation_loss': val_loss
         },
         class_names=['healthy', 'parkinson']
     )
@@ -130,20 +154,34 @@ def train_classical_mlp(cfg, dataset):
     X_tensor = torch.FloatTensor(X)
     y_tensor = torch.LongTensor(y)
     
-    # Split train/test
+    # Split train/validation/test
     indices = torch.randperm(len(X_tensor))
-    train_size = int(0.8 * len(indices))
-    train_indices = indices[:train_size]
-    test_indices = indices[train_size:]
     
-    X_train, X_test = X_tensor[train_indices], X_tensor[test_indices]
-    y_train, y_test = y_tensor[train_indices], y_tensor[test_indices]
+    # Usa validation_split dalla configurazione
+    val_split = cfg['training'].get('validation_split', 0.2)
+    test_split = 0.2  # Mantieni 20% per test
+    train_split = 1.0 - val_split - test_split
+    
+    train_size = int(train_split * len(indices))
+    val_size = int(val_split * len(indices))
+    test_size = len(indices) - train_size - val_size
+    
+    train_indices = indices[:train_size]
+    val_indices = indices[train_size:train_size + val_size]
+    test_indices = indices[train_size + val_size:]
+    
+    X_train, X_val, X_test = X_tensor[train_indices], X_tensor[val_indices], X_tensor[test_indices]
+    y_train, y_val, y_test = y_tensor[train_indices], y_tensor[val_indices], y_tensor[test_indices]
+    
+    print(f"📊 Dataset split: Train={len(X_train)}, Val={len(X_val)}, Test={len(X_test)}")
     
     # Crea dataset e dataloader
     train_dataset = TensorDataset(X_train, y_train)
+    val_dataset = TensorDataset(X_val, y_val)
     test_dataset = TensorDataset(X_test, y_test)
     
     train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True, num_workers=2, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=2, pin_memory=True)
     test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=2, pin_memory=True)
     
     # Crea modello
@@ -163,10 +201,17 @@ def train_classical_mlp(cfg, dataset):
     criterion = CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg['training'].get('max_lr', 0.001))
     
-    # Training loop
+    print(f"📊 Training con validation loss monitoring")
+    
+    # Training loop con validation loss
+    train_losses = []
+    val_losses = []
+    
     model.train()
     for epoch in range(cfg['training']['epochs']):
-        total_loss = 0
+        # Training phase
+        total_train_loss = 0
+        model.train()
         for batch_idx, (batch_x, batch_y) in enumerate(train_loader):
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             
@@ -185,10 +230,36 @@ def train_classical_mlp(cfg, dataset):
             loss.backward()
             optimizer.step()
             
-            total_loss += loss.item()
+            total_train_loss += loss.item()
         
-        if (epoch + 1) % 10 == 0:
-            print(f"Epoch {epoch+1}/{cfg['training']['epochs']}, Loss: {total_loss/len(train_loader):.4f}")
+        avg_train_loss = total_train_loss / len(train_loader)
+        train_losses.append(avg_train_loss)
+        
+        # Validation phase
+        model.eval()
+        total_val_loss = 0
+        val_correct = 0
+        val_total = 0
+        
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+                outputs = model(batch_x)
+                val_loss = criterion(outputs, batch_y)
+                total_val_loss += val_loss.item()
+                
+                # Calcola accuracy di validation
+                _, predicted = torch.max(outputs.data, 1)
+                val_total += batch_y.size(0)
+                val_correct += (predicted == batch_y).sum().item()
+        
+        avg_val_loss = total_val_loss / len(val_loader)
+        val_accuracy = val_correct / val_total
+        val_losses.append(avg_val_loss)
+        
+        # Print progress
+        if (epoch + 1) % 5 == 0 or epoch == 0:
+            print(f"Epoch {epoch+1}/{cfg['training']['epochs']} - Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
             if device.type == 'cuda':
                 print(f"   - GPU Memory: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
     
@@ -261,12 +332,23 @@ def train_transformers_mlp(cfg, dataset):
     if device.type == 'cuda':
         print(f"🎯 After transformer loading - GPU Memory: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
     
-    # Crea dataloader
-    train_size = int(0.8 * len(dataset))
-    test_size = len(dataset) - train_size
-    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+    # Crea dataloader con validation split
+    val_split = cfg['training'].get('validation_split', 0.2)
+    test_split = 0.2  # Mantieni 20% per test
+    train_split = 1.0 - val_split - test_split
+    
+    train_size = int(train_split * len(dataset))
+    val_size = int(val_split * len(dataset))
+    test_size = len(dataset) - train_size - val_size
+    
+    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(
+        dataset, [train_size, val_size, test_size]
+    )
+    
+    print(f"📊 Dataset split: Train={len(train_dataset)}, Val={len(val_dataset)}, Test={len(test_dataset)}")
     
     train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
     
     # Determina dimensione embedding
@@ -283,11 +365,18 @@ def train_transformers_mlp(cfg, dataset):
     criterion = CrossEntropyLoss()
     optimizer = torch.optim.Adam(mlp_head.parameters(), lr=cfg['training'].get('max_lr', 0.001))
     
-    # Training loop
+    print(f"📊 Training con validation loss monitoring")
+    
+    # Training loop con validation loss
+    train_losses = []
+    val_losses = []
+    
     mlp_head.train()
     
     for epoch in tqdm(range(cfg['training']['epochs']), desc="Training Transformers+MLP"):
-        total_loss = 0
+        # Training phase
+        total_train_loss = 0
+        mlp_head.train()
         epoch_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg['training']['epochs']}", leave=False)
         for batch in epoch_pbar:
             waveforms = batch['waveform']
@@ -312,11 +401,51 @@ def train_transformers_mlp(cfg, dataset):
             loss.backward()
             optimizer.step()
             
-            total_loss += loss.item()
+            total_train_loss += loss.item()
             epoch_pbar.set_postfix({'Loss': f'{loss.item():.4f}'})
         
-        if (epoch + 1) % 10 == 0:
-            print(f"Epoch {epoch+1}/{cfg['training']['epochs']}, Loss: {total_loss/len(train_loader):.4f}")
+        avg_train_loss = total_train_loss / len(train_loader)
+        train_losses.append(avg_train_loss)
+        
+        # Validation phase
+        mlp_head.eval()
+        total_val_loss = 0
+        val_correct = 0
+        val_total = 0
+        
+        with torch.no_grad():
+            for batch in val_loader:
+                waveforms = batch['waveform']
+                labels = batch['label'].long().to(device)
+                
+                # Estrai embeddings per ogni waveform nel batch
+                batch_embeddings = []
+                for waveform in waveforms:
+                    waveform_np = waveform.squeeze().numpy()
+                    embeddings = feature_extractor.extract(waveform_np)
+                    batch_embeddings.append(embeddings)
+                
+                # Stack degli embeddings in un batch tensor
+                embeddings = torch.stack(batch_embeddings).to(device)
+                embeddings = embeddings.squeeze(1)
+                
+                # Forward MLP
+                logits = mlp_head(embeddings)
+                val_loss = criterion(logits, labels)
+                total_val_loss += val_loss.item()
+                
+                # Calcola accuracy di validation
+                _, predicted = torch.max(logits.data, 1)
+                val_total += labels.size(0)
+                val_correct += (predicted == labels).sum().item()
+        
+        avg_val_loss = total_val_loss / len(val_loader)
+        val_accuracy = val_correct / val_total
+        val_losses.append(avg_val_loss)
+        
+        # Print progress
+        if (epoch + 1) % 5 == 0 or epoch == 0:
+            print(f"Epoch {epoch+1}/{cfg['training']['epochs']} - Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
     
     # Evaluation
     mlp_head.eval()
@@ -426,13 +555,26 @@ if __name__ == "__main__":
         
         device = torch.device(cfg['training']['device'])
         
-        # Split dataset
-        train_size = int(0.8 * len(dataset))
-        test_size = len(dataset) - train_size
-        train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+        # Split dataset con validation split dal config
+        validation_split = cfg['training'].get('validation_split', 0.2)
+        test_split = 0.2
+        train_split = 1.0 - validation_split - test_split
+        
+        print(f"📊 Dataset split: Train {train_split:.1%}, Val {validation_split:.1%}, Test {test_split:.1%}")
+        
+        # Prima divisione: train+val vs test
+        temp_size = int((1 - test_split) * len(dataset))
+        test_size = len(dataset) - temp_size
+        temp_dataset, test_dataset = torch.utils.data.random_split(dataset, [temp_size, test_size])
+        
+        # Seconda divisione: train vs validation
+        val_size = int(validation_split * len(dataset))
+        train_size = temp_size - val_size
+        train_dataset, val_dataset = torch.utils.data.random_split(temp_dataset, [train_size, val_size])
         
         # Dataloader
         train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
         test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
         
         # Determina input size per CNN
@@ -454,10 +596,16 @@ if __name__ == "__main__":
         criterion = CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg['training'].get('max_lr', 0.001))
         
-        # Training loop
-        model.train()
+        print(f"📊 Training con validation loss monitoring")
+        
+        # Training loop con validation loss
+        train_losses = []
+        val_losses = []
+        
         for epoch in tqdm(range(cfg['training']['epochs']), desc="Training CNN"):
-            total_loss = 0
+            # Training phase
+            model.train()
+            total_train_loss = 0
             epoch_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg['training']['epochs']}", leave=False)
             for batch in epoch_pbar:
                 waveforms = batch['waveform'].to(device)
@@ -469,11 +617,38 @@ if __name__ == "__main__":
                 loss.backward()
                 optimizer.step()
                 
-                total_loss += loss.item()
+                total_train_loss += loss.item()
                 epoch_pbar.set_postfix({'Loss': f'{loss.item():.4f}'})
-
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{cfg['training']['epochs']}, Loss: {total_loss/len(train_loader):.4f}")
+            
+            avg_train_loss = total_train_loss / len(train_loader)
+            train_losses.append(avg_train_loss)
+            
+            # Validation phase
+            model.eval()
+            total_val_loss = 0
+            val_correct = 0
+            val_total = 0
+            
+            with torch.no_grad():
+                for batch in val_loader:
+                    waveforms = batch['waveform'].to(device)
+                    labels = batch['label'].to(device)
+                    outputs = model(waveforms)
+                    val_loss = criterion(outputs, labels)
+                    total_val_loss += val_loss.item()
+                    
+                    # Calcola accuracy di validation
+                    _, predicted = torch.max(outputs.data, 1)
+                    val_total += labels.size(0)
+                    val_correct += (predicted == labels).sum().item()
+            
+            avg_val_loss = total_val_loss / len(val_loader)
+            val_accuracy = val_correct / val_total
+            val_losses.append(avg_val_loss)
+            
+            # Print progress
+            if (epoch + 1) % 10 == 0 or epoch == 0:
+                print(f"Epoch {epoch+1}/{cfg['training']['epochs']} - Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
         
         # Evaluation
         model.eval()
