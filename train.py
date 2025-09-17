@@ -347,9 +347,31 @@ def train_transformers_mlp(cfg, dataset):
     
     print(f"📊 Dataset split: Train={len(train_dataset)}, Val={len(val_dataset)}, Test={len(test_dataset)}")
     
-    train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
+    # OTTIMIZZAZIONE DataLoader per transformers+mlp
+    train_loader = DataLoader(
+        train_dataset, 
+        batch_size=cfg['training']['batch_size'], 
+        shuffle=True,
+        num_workers=4,  # Parallelizzazione caricamento dati
+        pin_memory=True,  # Trasferimento GPU più veloce
+        persistent_workers=True  # Riutilizzo workers per velocità
+    )
+    val_loader = DataLoader(
+        val_dataset, 
+        batch_size=cfg['training']['batch_size'], 
+        shuffle=False,
+        num_workers=2,
+        pin_memory=True,
+        persistent_workers=True
+    )
+    test_loader = DataLoader(
+        test_dataset, 
+        batch_size=cfg['training']['batch_size'], 
+        shuffle=False,
+        num_workers=2,
+        pin_memory=True,
+        persistent_workers=True
+    )
     
     # Determina dimensione embedding
     sample_batch = next(iter(train_loader))
@@ -382,17 +404,13 @@ def train_transformers_mlp(cfg, dataset):
             waveforms = batch['waveform']
             labels = batch['label'].long().to(device)  # Assicura che le labels siano LongTensor
             
-            # Estrai embeddings per ogni waveform nel batch
-            batch_embeddings = []
-            for waveform in waveforms:
-                waveform_np = waveform.squeeze().numpy()
-                embeddings = feature_extractor.extract(waveform_np)
-                batch_embeddings.append(embeddings)
+            # OTTIMIZZAZIONE: Estrai embeddings per l'intero batch in una volta sola!
+            # Converti waveforms in lista di numpy arrays
+            speech_batch = [waveform.squeeze().numpy() for waveform in waveforms]
             
-            # Stack degli embeddings in un batch tensor
-            embeddings = torch.stack(batch_embeddings).to(device)
-            # Rimuovi la dimensione extra: da [batch, 1, features] a [batch, features]
-            embeddings = embeddings.squeeze(1)
+            # Estrazione batch - MOLTO PIÙ VELOCE!
+            embeddings = feature_extractor.extract_batch(speech_batch)
+            embeddings = embeddings.to(device)
             
             # Forward MLP
             optimizer.zero_grad()
@@ -418,16 +436,10 @@ def train_transformers_mlp(cfg, dataset):
                 waveforms = batch['waveform']
                 labels = batch['label'].long().to(device)
                 
-                # Estrai embeddings per ogni waveform nel batch
-                batch_embeddings = []
-                for waveform in waveforms:
-                    waveform_np = waveform.squeeze().numpy()
-                    embeddings = feature_extractor.extract(waveform_np)
-                    batch_embeddings.append(embeddings)
-                
-                # Stack degli embeddings in un batch tensor
-                embeddings = torch.stack(batch_embeddings).to(device)
-                embeddings = embeddings.squeeze(1)
+                # OTTIMIZZAZIONE: Estrai embeddings per l'intero batch in una volta sola!
+                speech_batch = [waveform.squeeze().numpy() for waveform in waveforms]
+                embeddings = feature_extractor.extract_batch(speech_batch)
+                embeddings = embeddings.to(device)
                 
                 # Forward MLP
                 logits = mlp_head(embeddings)
@@ -459,17 +471,10 @@ def train_transformers_mlp(cfg, dataset):
             waveforms = batch['waveform']
             labels = batch['label'].long().to(device)  # Assicura che le labels siano LongTensor
             
-            # Estrai embeddings per ogni waveform nel batch
-            batch_embeddings = []
-            for waveform in waveforms:
-                waveform_np = waveform.squeeze().numpy()
-                embeddings = feature_extractor.extract(waveform_np)
-                batch_embeddings.append(embeddings)
-            
-            # Stack degli embeddings in un batch tensor
-            embeddings = torch.stack(batch_embeddings).to(device)
-            # Rimuovi la dimensione extra: da [batch, 1, features] a [batch, features]
-            embeddings = embeddings.squeeze(1)
+            # OTTIMIZZAZIONE: Estrai embeddings per l'intero batch in una volta sola!
+            speech_batch = [waveform.squeeze().numpy() for waveform in waveforms]
+            embeddings = feature_extractor.extract_batch(speech_batch)
+            embeddings = embeddings.to(device)
             
             logits = mlp_head(embeddings)
             _, predicted = torch.max(logits.data, 1)

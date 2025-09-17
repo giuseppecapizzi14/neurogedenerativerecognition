@@ -40,3 +40,24 @@ class AudioEmbeddings:
             outputs = self.model(**inputs)
         
         return outputs.last_hidden_state.mean(dim=1)
+    
+    def extract_batch(self, speech_batch):
+        '''
+        Extract embeddings from a batch of speeches - MUCH FASTER!
+        
+        Args:
+            speech_batch: List of speeches to extract embeddings from.
+        
+        Returns:
+            torch.Tensor: Batch of embeddings [batch_size, embedding_dim].
+        '''
+        
+        # Process entire batch at once - this is the key optimization!
+        inputs = self.processor(speech_batch, return_tensors="pt", padding="longest", sampling_rate=self.sampling_rate)
+        inputs = {name: tensor.to(self.device) for name, tensor in inputs.items()}
+        
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        
+        # Return mean pooled embeddings for each sample in batch
+        return outputs.last_hidden_state.mean(dim=1)  # [batch_size, embedding_dim]
