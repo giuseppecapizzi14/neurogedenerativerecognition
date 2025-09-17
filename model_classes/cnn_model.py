@@ -17,25 +17,18 @@ class CNNModel(Module):
         super(CNNModel, self).__init__() # type: ignore
 
         self.feature_extraction = Sequential(
-            # Primo strato convoluzionale - cattura pattern temporali grossolani
-            Conv1d(in_channels = 1, out_channels = 16, kernel_size = 11, stride = 4, padding = 0, device = device),
-            BatchNorm1d(num_features = 16, device = device),
+            # Primo strato convoluzionale - pattern temporali grossolani
+            Conv1d(in_channels = 1, out_channels = 12, kernel_size = 15, stride = 6, padding = 0, device = device),
+            BatchNorm1d(num_features = 12, device = device),
             ReLU(inplace = True),
-            MaxPool1d(kernel_size = 3, stride = 2, padding = 0),
+            MaxPool1d(kernel_size = 4, stride = 3, padding = 0),
             Dropout(dropout),
 
-            # Secondo strato convoluzionale - pattern di media granularità
-            Conv1d(in_channels = 16, out_channels = 32, kernel_size = 7, stride = 2, padding = 0, device = device),
-            BatchNorm1d(num_features = 32, device = device),
+            # Secondo strato convoluzionale - features finali
+            Conv1d(in_channels = 12, out_channels = 24, kernel_size = 9, stride = 4, padding = 0, device = device),
+            BatchNorm1d(num_features = 24, device = device),
             ReLU(inplace = True),
-            MaxPool1d(kernel_size = 3, stride = 2, padding = 0),
-            Dropout(dropout),
-
-            # Terzo strato convoluzionale - pattern fini e features finali
-            Conv1d(in_channels = 32, out_channels = 64, kernel_size = 5, stride = 2, padding = 0, device = device),
-            BatchNorm1d(num_features = 64, device = device),
-            ReLU(inplace = True),
-            MaxPool1d(kernel_size = 3, stride = 2, padding = 0),
+            MaxPool1d(kernel_size = 4, stride = 3, padding = 0),
             Dropout(dropout)
         )
 
@@ -68,14 +61,13 @@ class CNNModel(Module):
         assert not last_conv_layer is None, "At least one convolutional layer must be present"
 
         self.classification = Sequential(
-            # Strato completamente connesso ottimizzato
-            Linear(in_features = last_conv_layer.out_channels * sample_len, out_features = 64, device = device),
-            BatchNorm1d(num_features = 64, device = device),
+            # Strato completamente connesso ultra-ottimizzato
+            Linear(in_features = last_conv_layer.out_channels * sample_len, out_features = 32, device = device),
             ReLU(inplace = True),
             Dropout(dropout),
 
             # Strato di output
-            Linear(in_features = 64, out_features = 2, device = device),
+            Linear(in_features = 32, out_features = 2, device = device),
             Softmax(1)
         )
 

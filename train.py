@@ -573,9 +573,29 @@ if __name__ == "__main__":
         train_dataset, val_dataset = torch.utils.data.random_split(temp_dataset, [train_size, val_size])
         
         # Dataloader
-        train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
-        test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
+        # DataLoader ottimizzati per massima velocità
+        train_loader = DataLoader(
+            train_dataset, 
+            batch_size=cfg['training']['batch_size'], 
+            shuffle=True,
+            num_workers=4,  # Parallelizzazione caricamento dati
+            pin_memory=True,  # Trasferimento GPU più veloce
+            persistent_workers=True  # Riutilizzo workers
+        )
+        val_loader = DataLoader(
+            val_dataset, 
+            batch_size=cfg['training']['batch_size'], 
+            shuffle=False,
+            num_workers=2,
+            pin_memory=True
+        )
+        test_loader = DataLoader(
+            test_dataset, 
+            batch_size=cfg['training']['batch_size'], 
+            shuffle=False,
+            num_workers=2,
+            pin_memory=True
+        )
         
         # Determina input size per CNN
         sample_batch = next(iter(train_loader))
@@ -608,8 +628,8 @@ if __name__ == "__main__":
             total_train_loss = 0
             epoch_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{cfg['training']['epochs']}", leave=False)
             for batch in epoch_pbar:
-                waveforms = batch['waveform'].to(device)
-                labels = batch['label'].to(device)
+                waveforms = batch['waveform'].to(device, non_blocking=True)
+                labels = batch['label'].to(device, non_blocking=True)
                 
                 optimizer.zero_grad()
                 outputs = model(waveforms)
@@ -623,32 +643,35 @@ if __name__ == "__main__":
             avg_train_loss = total_train_loss / len(train_loader)
             train_losses.append(avg_train_loss)
             
-            # Validation phase
-            model.eval()
-            total_val_loss = 0
-            val_correct = 0
-            val_total = 0
-            
-            with torch.no_grad():
-                for batch in val_loader:
-                    waveforms = batch['waveform'].to(device)
-                    labels = batch['label'].to(device)
-                    outputs = model(waveforms)
-                    val_loss = criterion(outputs, labels)
-                    total_val_loss += val_loss.item()
-                    
-                    # Calcola accuracy di validation
-                    _, predicted = torch.max(outputs.data, 1)
-                    val_total += labels.size(0)
-                    val_correct += (predicted == labels).sum().item()
-            
-            avg_val_loss = total_val_loss / len(val_loader)
-            val_accuracy = val_correct / val_total
-            val_losses.append(avg_val_loss)
-            
-            # Print progress
-            if (epoch + 1) % 10 == 0 or epoch == 0:
+            # Validation phase - solo ogni 3 epoche per velocità
+            if (epoch + 1) % 3 == 0 or epoch == 0 or epoch == cfg['training']['epochs'] - 1:
+                model.eval()
+                total_val_loss = 0
+                val_correct = 0
+                val_total = 0
+                
+                with torch.no_grad():
+                    for batch in val_loader:
+                        waveforms = batch['waveform'].to(device, non_blocking=True)
+                        labels = batch['label'].to(device, non_blocking=True)
+                        
+                        outputs = model(waveforms)
+                        val_loss = criterion(outputs, labels)
+                        
+                        total_val_loss += val_loss.item()
+                        
+                        # Calcola accuratezza
+                        _, predicted = torch.max(outputs.data, 1)
+                        val_total += labels.size(0)
+                        val_correct += (predicted == labels).sum().item()
+
+                avg_val_loss = total_val_loss / len(val_loader)
+                val_accuracy = val_correct / val_total
+                val_losses.append(avg_val_loss)
+                
                 print(f"Epoch {epoch+1}/{cfg['training']['epochs']} - Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
+            else:
+                print(f"Epoch {epoch+1}/{cfg['training']['epochs']} - Train Loss: {avg_train_loss:.4f}")
         
         # Evaluation
         model.eval()
