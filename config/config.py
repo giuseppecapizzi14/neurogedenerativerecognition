@@ -125,13 +125,28 @@ class TrainingConfig:
             raise ValueError(f"'checkpoint_dir' of {checkpoint_dir} must be a valid directory path")
 
         # Carica il device da utilizzare tra CUDA, MPS e CPU
+        print(f"🔍 DEBUG DEVICE CONFIGURATION:")
+        print(f"   - Requested device: {device_name}")
+        print(f"   - CUDA available: {torch.cuda.is_available()}")
+        if torch.cuda.is_available():
+            print(f"   - CUDA device count: {torch.cuda.device_count()}")
+            print(f"   - Current CUDA device: {torch.cuda.current_device()}")
+            print(f"   - CUDA device name: {torch.cuda.get_device_name()}")
+        print(f"   - MPS available: {torch.backends.mps.is_available()}")
+        
         match device_name:
             case "cuda" if torch.cuda.is_available():
                 device = torch.device("cuda")
+                print(f"✅ Using CUDA GPU: {torch.cuda.get_device_name()}")
             case "mps" if torch.backends.mps.is_available():
                 device = torch.device("mps")
+                print(f"✅ Using MPS (Apple Silicon GPU)")
             case _:
                 device = torch.device("cpu")
+                print(f"⚠️  Using CPU (no GPU acceleration)")
+        
+        print(f"🎯 Final device: {device}")
+        print(f"{'='*50}")
 
         if evaluation_metric not in ValidEvaluationMetrics:
             raise ValueError(f"'evaluation_metric' of '{evaluation_metric}' must be one of {ValidEvaluationMetrics}")

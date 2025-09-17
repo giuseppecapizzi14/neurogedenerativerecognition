@@ -105,7 +105,7 @@ class AudioDataset(Dataset[Sample]):
             # Normalizza i path separators per compatibilità cross-platform
             self.audio_files = [os.path.normpath(filepath.replace('\\', '/')) for filepath in df['filepath'].tolist()]
             self.labels = df['label_id'].tolist()
-            print(f"✅ Preprocessing completato con successo: caricati {len(self.audio_files)} file audio dal file labels esistente.")
+
         else:
             # Genera labels.csv
             self.audio_files = []
@@ -122,7 +122,6 @@ class AudioDataset(Dataset[Sample]):
                         
                         # Estrai label dal filepath completo
                         label_text = self.dataset_config['label_extractor'](filepath)
-                        print(f"File: {filepath} -> Label: {label_text}")
                         if label_text in self.dataset_config['label_dict']:
                             label_id = self.dataset_config['label_dict'][label_text]
                             
@@ -131,7 +130,6 @@ class AudioDataset(Dataset[Sample]):
                             label_texts.append(label_text)
             
             print(f"Found {len(self.audio_files)} files")
-            print(f"Label distribution: {dict(zip(*np.unique(label_texts, return_counts=True)))}" if label_texts else "No labels found!")
             
             if len(self.audio_files) > 0:
                 # Salva labels.csv
@@ -141,7 +139,6 @@ class AudioDataset(Dataset[Sample]):
                     'label_id': self.labels
                 })
                 df.to_csv(labels_path, index=False)
-                print(f"✅ Preprocessing completato con successo: generato file labels.csv con {len(self.audio_files)} file audio.")
             else:
                 print("❌ Preprocessing fallito: nessun file audio trovato nel dataset.")
                 raise ValueError(f"Nessun file audio trovato nel dataset {self.dataset_name}")
@@ -155,10 +152,6 @@ class AudioDataset(Dataset[Sample]):
         
         # Normalizza il path per compatibilità cross-platform (sicurezza aggiuntiva)
         audio_path = os.path.normpath(audio_path.replace('\\', '/'))
-        
-        # Debug: stampa il path che sta cercando di caricare
-        print(f"Tentativo di caricare: {audio_path}")
-        print(f"File esiste: {os.path.exists(audio_path)}")
         
         # Carica audio
         waveform, sample_rate = torchaudio.load(audio_path)

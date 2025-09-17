@@ -92,6 +92,14 @@ def train_classical_mlp(cfg, dataset):
     
     device = torch.device(cfg['training']['device'])
     
+    # Debug GPU usage
+    print(f"🔍 MLP TRAINING DEBUG:")
+    print(f"   - Device: {device}")
+    if device.type == 'cuda':
+        print(f"   - GPU Memory before training: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
+        print(f"   - GPU Memory cached: {torch.cuda.memory_reserved()/1024**2:.1f} MB")
+    print(f"{'='*40}")
+    
     # Estrai features per tutti i campioni
     X, y = [], []
     for i in tqdm(range(len(dataset)), desc="Extracting features"):
@@ -131,6 +139,14 @@ def train_classical_mlp(cfg, dataset):
     input_dim = X.shape[1]
     model = MLP(input_dim, num_classes, cfg).to(device)
     
+    # Debug model on GPU
+    print(f"🎯 MODEL DEBUG:")
+    print(f"   - Model device: {next(model.parameters()).device}")
+    print(f"   - Model parameters count: {sum(p.numel() for p in model.parameters())}")
+    if device.type == 'cuda':
+        print(f"   - GPU Memory after model creation: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
+    print(f"{'='*40}")
+    
     # Training setup
     criterion = CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg['training'].get('max_lr', 0.001))
@@ -139,8 +155,17 @@ def train_classical_mlp(cfg, dataset):
     model.train()
     for epoch in range(cfg['training']['epochs']):
         total_loss = 0
-        for batch_x, batch_y in train_loader:
+        for batch_idx, (batch_x, batch_y) in enumerate(train_loader):
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            
+            # Debug first batch of first epoch
+            if epoch == 0 and batch_idx == 0:
+                print(f"🔍 FIRST BATCH DEBUG:")
+                print(f"   - Batch input device: {batch_x.device}")
+                print(f"   - Batch target device: {batch_y.device}")
+                if device.type == 'cuda':
+                    print(f"   - GPU Memory during training: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
+                print(f"{'='*40}")
             
             optimizer.zero_grad()
             outputs = model(batch_x)
@@ -152,6 +177,8 @@ def train_classical_mlp(cfg, dataset):
         
         if (epoch + 1) % 10 == 0:
             print(f"Epoch {epoch+1}/{cfg['training']['epochs']}, Loss: {total_loss/len(train_loader):.4f}")
+            if device.type == 'cuda':
+                print(f"   - GPU Memory: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
     
     # Evaluation
     model.eval()
@@ -204,12 +231,23 @@ def train_transformers_mlp(cfg, dataset):
     
     device = torch.device(cfg['training']['device'])
     
+    # Debug GPU usage for transformers
+    print(f"🔍 TRANSFORMERS+MLP DEBUG:")
+    print(f"   - Device: {device}")
+    if device.type == 'cuda':
+        print(f"   - GPU Memory before model loading: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
+    print(f"{'='*40}")
+    
     # Inizializza estrattore features transformers
     model_name = cfg['features']['transformers']['model_name']
     sampling_rate = cfg['data']['target_sr']
     feature_extractor = AudioEmbeddings(model_name, device, sampling_rate)
 
     print("Model:", model_name)
+    
+    # Debug after transformer model loading
+    if device.type == 'cuda':
+        print(f"🎯 After transformer loading - GPU Memory: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
     
     # Crea dataloader
     train_size = int(0.8 * len(dataset))
