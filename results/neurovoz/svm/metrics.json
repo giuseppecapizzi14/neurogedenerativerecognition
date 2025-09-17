@@ -1,0 +1,45 @@
+{
+  "model_name": "SVM",
+  "dataset_name": "Neurovoz",
+  "model_settings": {
+    "C": 1.0,
+    "kernel": "rbf",
+    "gamma": "scale",
+    "validation_loss": 0.5641968290076448
+  },
+  "metrics": {
+    "accuracy": 0.697986577181208,
+    "precision": 0.6984666800408522,
+    "recall": 0.697986577181208,
+    "f1_score": 0.6975879133297973,
+    "sensitivity": 0.6632653061224489,
+    "specificity": 0.7317880794701986
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.690625,
+      "recall": 0.7317880794701986,
+      "f1-score": 0.7106109324758842,
+      "support": 302.0
+    },
+    "parkinson": {
+      "precision": 0.7065217391304348,
+      "recall": 0.6632653061224489,
+      "f1-score": 0.6842105263157895,
+      "support": 294.0
+    },
+    "accuracy": 0.697986577181208,
+    "macro avg": {
+      "precision": 0.6985733695652174,
+      "recall": 0.6975266927963237,
+      "f1-score": 0.6974107293958369,
+      "support": 596.0
+    },
+    "weighted avg": {
+      "precision": 0.6984666800408522,
+      "recall": 0.697986577181208,
+      "f1-score": 0.6975879133297973,
+      "support": 596.0
+    }
+  }
+}

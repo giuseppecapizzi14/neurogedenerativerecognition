@@ -1,0 +1,49 @@
+{
+  "model_name": "MLP",
+  "dataset_name": "Neurovoz",
+  "model_settings": {
+    "hidden_layers": [
+      256,
+      128
+    ],
+    "dropout": 0.2,
+    "learning_rate": 0.001,
+    "epochs": 25,
+    "batch_size": 64
+  },
+  "metrics": {
+    "accuracy": 0.7231543624161074,
+    "precision": 0.7241464346804294,
+    "recall": 0.7231543624161074,
+    "f1_score": 0.723306436410459,
+    "sensitivity": 0.7323943661971831,
+    "specificity": 0.7147435897435898
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.745819397993311,
+      "recall": 0.7147435897435898,
+      "f1-score": 0.7299509001636661,
+      "support": 312.0
+    },
+    "parkinson": {
+      "precision": 0.7003367003367004,
+      "recall": 0.7323943661971831,
+      "f1-score": 0.7160068846815835,
+      "support": 284.0
+    },
+    "accuracy": 0.7231543624161074,
+    "macro avg": {
+      "precision": 0.7230780491650057,
+      "recall": 0.7235689779703864,
+      "f1-score": 0.7229788924226248,
+      "support": 596.0
+    },
+    "weighted avg": {
+      "precision": 0.7241464346804294,
+      "recall": 0.7231543624161074,
+      "f1-score": 0.723306436410459,
+      "support": 596.0
+    }
+  }
+}
