@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"       # "waveform" | "spectrogram"
   mlp:
-    hidden: [128]                              # Ridotto da [256, 128] per velocità
-    dropout: 0.2                               # Ridotto dropout per convergenza più veloce
+    hidden: [256, 128]                         # Aumentato per maggiore capacità di apprendimento
+    dropout: 0.2                               # Aumentato dropout per prevenire overfitting
   svm:
     kernel: "rbf"
     C: 1.0
@@ -51,12 +51,12 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25  # Ottimizzato per dataset di ~3000 campioni - bilanciamento tra convergenza e overfitting
-  batch_size: 64                            # Ridotto per transformers (memoria GPU)
+  epochs: 30  # Aumentato per permettere maggiore convergenza
+  batch_size: 64                            # Manteniamo per stabilità
   optimizer: adam
-  max_lr: 0.003                            # Learning rate ottimizzato per transformers
-  min_lr: 0.0001                           # Min LR ridotto
-  warmup_ratio: 0.1                        # Warmup ridotto per convergenza veloce
+  max_lr: 0.001                            # Ridotto per convergenza più stabile
+  min_lr: 0.00001                          # Min LR più basso per fine-tuning
+  warmup_ratio: 0.15                       # Warmup aumentato per stabilità
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
