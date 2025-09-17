@@ -102,7 +102,8 @@ class AudioDataset(Dataset[Sample]):
         if os.path.exists(labels_path):
             # Carica labels esistenti
             df = pd.read_csv(labels_path)
-            self.audio_files = df['filepath'].tolist()
+            # Normalizza i path separators per compatibilità cross-platform
+            self.audio_files = [os.path.normpath(filepath.replace('\\', '/')) for filepath in df['filepath'].tolist()]
             self.labels = df['label_id'].tolist()
             print(f"✅ Preprocessing completato con successo: caricati {len(self.audio_files)} file audio dal file labels esistente.")
         else:
@@ -116,6 +117,8 @@ class AudioDataset(Dataset[Sample]):
                 for file in files:
                     if file.endswith(self.dataset_config['file_pattern']):
                         filepath = os.path.join(root, file)
+                        # Normalizza i path separators per compatibilità cross-platform
+                        filepath = os.path.normpath(filepath.replace('\\', '/'))
                         
                         # Estrai label dal filepath completo
                         label_text = self.dataset_config['label_extractor'](filepath)
