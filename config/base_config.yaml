@@ -51,12 +51,12 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 30  # Aumentato per permettere maggiore convergenza
+  epochs: 25  # Aumentato per permettere maggiore convergenza
   batch_size: 64                            # Manteniamo per stabilità
   optimizer: adam
   max_lr: 0.001                            # Ridotto per convergenza più stabile
-  min_lr: 0.00001                          # Min LR più basso per fine-tuning
-  warmup_ratio: 0.15                       # Warmup aumentato per stabilità
+  min_lr: 0.0001                          # Min LR più basso per fine-tuning
+  warmup_ratio: 0.1                       # Warmup aumentato per stabilità
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
