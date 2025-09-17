@@ -153,6 +153,13 @@ class AudioDataset(Dataset[Sample]):
         audio_path = self.audio_files[idx]
         label = self.labels[idx]
         
+        # Normalizza il path per compatibilità cross-platform (sicurezza aggiuntiva)
+        audio_path = os.path.normpath(audio_path.replace('\\', '/'))
+        
+        # Debug: stampa il path che sta cercando di caricare
+        print(f"Tentativo di caricare: {audio_path}")
+        print(f"File esiste: {os.path.exists(audio_path)}")
+        
         # Carica audio
         waveform, sample_rate = torchaudio.load(audio_path)
         
