@@ -2,7 +2,7 @@ data:
   train_ratio: 0.85
   test_val_ratio: 0.35
   data_dir: /root/dataset/dataset
-  dataset_name: "Neurovoz"     # "Ita-PVS" | "Neurovoz" | "Addresso"
+  dataset_name: "Ita-PVS"     # "Ita-PVS" | "Neurovoz" | "Addresso"
   target_sr: 16000
   mono: true
   normalize: "peak"           # "peak" | "rms"
@@ -51,7 +51,7 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25  # Ridotto ulteriormente per test rapidi
+  epochs: 15  # Ridotto ulteriormente per test rapidi
   batch_size: 128                          # Aumentato drasticamente per massima efficienza GPU
   optimizer: adam
   max_lr: 0.002                            # Aumentato per convergenza rapida
