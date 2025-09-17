@@ -32,16 +32,22 @@ def train_classical_svm(cfg, dataset):
     """Training per SVM classico"""
     print("Training Classical SVM...")
     
-    # Estrai features per tutti i campioni
+    # Estrai features per tutti i campioni con parallelizzazione
+    print("🚀 Estraendo features con ottimizzazioni...")
     X, y = [], []
-    for i in tqdm(range(len(dataset)), desc="Extracting features"):
-        sample = dataset[i]
-        waveform = sample['waveform']
-        label = sample['label']
+    
+    # Usa DataLoader per batch processing delle features
+    feature_loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
+    
+    for batch in tqdm(feature_loader, desc="Extracting features (batched)"):
+        batch_features = []
+        for i in range(len(batch['waveform'])):
+            waveform = batch['waveform'][i]
+            features = extract_features(waveform, cfg['data']['target_sr'], cfg)
+            batch_features.append(features)
         
-        features = extract_features(waveform, cfg['data']['target_sr'], cfg)
-        X.append(features)
-        y.append(label)
+        X.extend(batch_features)
+        y.extend(batch['label'].tolist())
     
     X = np.array(X)
     y = np.array(y)
@@ -100,16 +106,22 @@ def train_classical_mlp(cfg, dataset):
         print(f"   - GPU Memory cached: {torch.cuda.memory_reserved()/1024**2:.1f} MB")
     print(f"{'='*40}")
     
-    # Estrai features per tutti i campioni
+    # Estrai features per tutti i campioni con parallelizzazione
+    print("🚀 Estraendo features con ottimizzazioni...")
     X, y = [], []
-    for i in tqdm(range(len(dataset)), desc="Extracting features"):
-        sample = dataset[i]
-        waveform = sample['waveform']
-        label = sample['label']
+    
+    # Usa DataLoader per batch processing delle features
+    feature_loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
+    
+    for batch in tqdm(feature_loader, desc="Extracting features (batched)"):
+        batch_features = []
+        for i in range(len(batch['waveform'])):
+            waveform = batch['waveform'][i]
+            features = extract_features(waveform, cfg['data']['target_sr'], cfg)
+            batch_features.append(features)
         
-        features = extract_features(waveform, cfg['data']['target_sr'], cfg)
-        X.append(features)
-        y.append(label)
+        X.extend(batch_features)
+        y.extend(batch['label'].tolist())
     
     X = np.array(X)
     y = np.array(y)
@@ -131,8 +143,8 @@ def train_classical_mlp(cfg, dataset):
     train_dataset = TensorDataset(X_train, y_train)
     test_dataset = TensorDataset(X_test, y_test)
     
-    train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True, num_workers=2, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=2, pin_memory=True)
     
     # Crea modello
     num_classes = len(set(y))

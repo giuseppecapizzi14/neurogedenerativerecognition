@@ -50,7 +50,7 @@ features:
 
 training:
   epochs: 2
-  batch_size: 32
+  batch_size: 128              # Aumentato da 32 a 128 per sfruttare meglio la GPU
   optimizer: adam
   max_lr: 0.005
   min_lr: 0.001
