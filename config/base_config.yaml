@@ -12,17 +12,17 @@ data:
   label_map: { healthy: 0, alzheimer: 1 }
 
 model:
-  dropout: 0.5                              # ⬆️ Aumentato da 0.35 per prevenire overfitting su dataset piccolo
-  branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  dropout: 0.6                            # ⬆️ Aumentato ulteriormente per combattere overfitting
+  branch: "classical_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [64, 32]                # ⬇️ Semplificato da [128,64,32] per dataset piccolo
-    dropout: 0.5                           # ⬆️ Aumentato da 0.4 per prevenire overfitting
+    hidden_layers: [32]                    # ⬇️ Ulteriormente semplificato per dataset piccolo
+    dropout: 0.6                           # ⬆️ Aumentato per prevenire overfitting severo
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
-    C: 5.0                                 # ⬇️ Ridotto da 10.0 per meno overfitting
+    C: 1.0                                 # ⬇️ Ulteriormente ridotto per meno overfitting
     gamma: "scale"                         # Scale per bilanciamento migliore
     class_weight: "balanced"               # CRITICO: bilancia classi sbilanciate
 
@@ -59,13 +59,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 8                               # ⬇️ Ridotto da 12 per evitare overfitting su dataset piccolo
-  batch_size: 8                           # ⬇️ Ridotto da 24 per gradiente più stabile
+  epochs: 15                              # ⬆️ Aumentato per convergenza migliore con LR basso
+  batch_size: 4                           # ⬇️ Ulteriormente ridotto per gradiente più preciso
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.0001                          # ⬇️ Ridotto da 0.0003 per apprendimento più cauto
-  min_lr: 0.000001                        # ⬇️ Min LR proporzionale (1/100 del max)
-  warmup_ratio: 0.3                       # Warmup ridotto per MLP più semplice
-  weight_decay: 0.05                      # RIDOTTO: MLP classico ha meno parametri, meno regolarizzazione
+  max_lr: 0.00005                         # ⬇️ Dimezzato per apprendimento più graduale
+  min_lr: 0.0000005                       # ⬇️ Min LR proporzionale (1/100 del max)
+  warmup_ratio: 0.4                       # ⬆️ Warmup più lungo per stabilità
+  weight_decay: 0.1                       # ⬆️ Aumentato per più regolarizzazione
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
