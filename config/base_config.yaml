@@ -49,7 +49,7 @@ features:
     hop_length: 128                        # Valore standard ottimizzato
     log: true
   transformers:
-    model_name: "facebook/wav2vec2-base-960h"     # Miglior modello dai test (83.05% accuracy)
+    model_name: "ALM/hubert-base-audioset"        
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: false                      # Unfreeze per fine-tuning completo
     max_length: 32000                          # Ridotto da 48000 per dataset piccolo (2s * 16kHz)
@@ -63,13 +63,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25                              # Aumentato per dataset piccolo: serve più training
-  batch_size: 48                          # Batch size ottimale per Transformers+MLP
-  lr: 0.0008                              # Learning rate ottimale dai migliori risultati
-  max_lr: 0.002                           # Scheduler ciclico per convergenza migliore
-  min_lr: 0.00005                         # LR minimo per fine-tuning
-  warmup_ratio: 0.1                       # Warmup ridotto per dataset piccolo
-  weight_decay: 0.01                      # Regolarizzazione per evitare overfitting
+  epochs: 15                              # Ottimale per dataset piccolo: evita overfitting
+  batch_size: 32                          # Ridotto per dataset piccolo (22 campioni test)
+  lr: 0.0005                              # LR più conservativo per convergenza stabile
+  max_lr: 0.001                           # Scheduler più conservativo
+  min_lr: 0.00001                         # LR minimo per fine-tuning preciso
+  warmup_ratio: 0.15                      # Warmup aumentato per stabilità
+  weight_decay: 0.02                      # Più regolarizzazione per evitare overfitting
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
