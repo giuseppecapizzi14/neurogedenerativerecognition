@@ -12,23 +12,23 @@ data:
   label_map: { healthy: 0, alzheimer: 1 }
 
 model:
-  dropout: 0.6                            # ⬆️ Aumentato ulteriormente per combattere overfitting
+  dropout: 0.6                            # Aumentato ulteriormente per combattere overfitting
   branch: "classical_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [32]                    # ⬇️ Ulteriormente semplificato per dataset piccolo
-    dropout: 0.6                           # ⬆️ Aumentato per prevenire overfitting severo
+    hidden_layers: [32]                    # Ulteriormente semplificato per dataset piccolo
+    dropout: 0.6                           # Aumentato per prevenire overfitting severo
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
-    kernel: "rbf"                          # 🎯 CAMBIATO: RBF per pattern non-lineari più complessi
-    C: 10.0                                # ⬆️ AUMENTATO: più flessibilità per 80% accuracy target
-    gamma: "auto"                          # 🎯 CAMBIATO: auto per dataset piccolo (1/n_features)
-    class_weight: "balanced"               # CRITICO: bilancia classi sbilanciate
+    kernel: "rbf"                          # Cambiato: RBF per pattern non-lineari piu complessi
+    C: 50.0                                # Aumentato: piu flessibilita per 80% accuracy target
+    gamma: "scale"                         # Cambiato: scale per migliore gestione features
+    class_weight: "balanced"               # Bilanciamento automatico classi
 
 features:
   classical:
-    n_mfcc: 20                             # ⬆️ AUMENTATO: più coefficienti per dettagli audio
+    n_mfcc: 20                             # Aumentato: piu coefficienti per dettagli audio
     mfcc_delta: true                       # Delta features per dinamica temporale
     mfcc_delta2: true                      # Delta-delta per accelerazione
     chroma: true                           # Features armoniche
@@ -36,20 +36,23 @@ features:
     spectral_bandwidth: true               # Larghezza banda spettrale
     spectral_rolloff: true                 # Rolloff spettrale
     zero_crossing_rate: true               # Tasso attraversamento zero
-    rms_energy: true                       # ⬆️ AGGIUNTO: energia RMS per intensità audio
-    tempo: true                            # ⬆️ AGGIUNTO: tempo per ritmo audio
-    pitch: false                           # ⬇️ DISABILITATO: può causare errori su alcuni audio
-    jitter_shimmer: false                  # ⬇️ DISABILITATO: richiede Parselmouth stabile
+    rms_energy: true                       # Aggiunto: energia RMS per intensita audio
+    tempo: true                            # Aggiunto: tempo per ritmo audio
+    tonnetz: true                          # Nuove: features armoniche complesse
+    poly_features: true                    # Nuove: caratteristiche ritmiche
+    spectral_contrast_enhanced: true       # Nuove: contrasto spettrale migliorato
+    pitch: false                           # Disabilitato: puo causare errori su alcuni audio
+    jitter_shimmer: false                  # Disabilitato: richiede Parselmouth stabile
   spectrogram:
-    n_mels: 16                             # ⬇️ Ridotto da 32 per dataset piccolo (meno complessità)
-    n_fft: 128                             # ⬇️ Ridotto da 256 per evitare overfitting
+    n_mels: 16                             # Ridotto da 32 per dataset piccolo (meno complessita)
+    n_fft: 128                             # Ridotto da 256 per evitare overfitting
     hop_length: 128                        # Valore standard ottimizzato
     log: true
   transformers:
     model_name: "facebook/wav2vec2-base-960h"     # Miglior modello dai test (83.05% accuracy)
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: false                      # Unfreeze per fine-tuning completo
-    max_length: 32000                          # ⬇️ Ridotto da 48000 per dataset piccolo (2s * 16kHz)
+    max_length: 32000                          # Ridotto da 48000 per dataset piccolo (2s * 16kHz)
     layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
@@ -60,13 +63,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 15                              # ⬆️ Aumentato per convergenza migliore con LR basso
-  batch_size: 4                           # ⬇️ Ulteriormente ridotto per gradiente più preciso
-  optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.00005                         # ⬇️ Dimezzato per apprendimento più graduale
-  min_lr: 0.0000005                       # ⬇️ Min LR proporzionale (1/100 del max)
-  warmup_ratio: 0.4                       # ⬆️ Warmup più lungo per stabilità
-  weight_decay: 0.1                       # ⬆️ Aumentato per più regolarizzazione
+  epochs: 15                              # Aumentato per convergenza migliore con LR basso
+  batch_size: 4                           # Ulteriormente ridotto per gradiente piu preciso
+  lr: 0.0001                              # Learning rate base
+  max_lr: 0.00005                         # Dimezzato per apprendimento piu graduale
+  min_lr: 0.0000005                       # Min LR proporzionale (1/100 del max)
+  warmup_ratio: 0.4                       # Warmup piu lungo per stabilita
+  weight_decay: 0.1                       # Aumentato per piu regolarizzazione
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
@@ -74,6 +77,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.15                     # ⬇️ Ridotto da 0.20 per massimizzare training data
+  validation_split: 0.15                     # Ridotto da 0.20 per massimizzare training data
 
 plot: [accuracy, loss]

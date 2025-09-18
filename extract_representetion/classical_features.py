@@ -134,6 +134,33 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
         spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sr)
         features.extend([np.mean(spectral_rolloff), np.std(spectral_rolloff)])
     
+    # Tonnetz features (armonie complesse)
+    if cfg['features']['classical'].get('tonnetz', False):
+        try:
+            tonnetz = librosa.feature.tonnetz(y=audio, sr=sr)
+            features.extend(np.mean(tonnetz, axis=1).tolist())
+            features.extend(np.std(tonnetz, axis=1).tolist())
+        except:
+            # Se fallisce, aggiungi zeri per mantenere dimensionalità
+            features.extend([0] * 12)  # 6 mean + 6 std
+    
+    # Poly features (caratteristiche ritmiche)
+    if cfg['features']['classical'].get('poly_features', False):
+        try:
+            poly_features = librosa.feature.poly_features(y=audio, sr=sr, order=1)
+            features.extend([np.mean(poly_features), np.std(poly_features)])
+        except:
+            features.extend([0, 0])
+    
+    # Spectral contrast migliorato (più bande)
+    if cfg['features']['classical'].get('spectral_contrast_enhanced', False):
+        try:
+            spectral_contrast = librosa.feature.spectral_contrast(y=audio, sr=sr, n_bands=6)
+            features.extend(np.mean(spectral_contrast, axis=1).tolist())
+            features.extend(np.std(spectral_contrast, axis=1).tolist())
+        except:
+            features.extend([0] * 14)  # 7 mean + 7 std
+    
     # Converti a array e gestisci valori NaN/Inf
     # Debug: verifica che tutte le features siano scalari
     for i, feat in enumerate(features):
