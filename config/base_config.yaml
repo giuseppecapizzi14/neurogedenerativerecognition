@@ -13,7 +13,7 @@ data:
 
 model:
   dropout: 0.35                             # Aumentato per dataset piccolo (prevenire overfitting)
-  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "classical_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
