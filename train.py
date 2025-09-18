@@ -310,7 +310,7 @@ def train_classical_mlp(cfg, dataset):
         y_pred=all_predictions,
         dataset_name=cfg['data']['dataset_name'],
         model_config={
-            'hidden_layers': cfg['model']['mlp']['hidden'],
+            'hidden_layers': cfg['model']['mlp']['hidden_layers'],
             'dropout': cfg['model']['mlp']['dropout'],
             'learning_rate': cfg['training']['max_lr'],
             'epochs': cfg['training']['epochs'],
