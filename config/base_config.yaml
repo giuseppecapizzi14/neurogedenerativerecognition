@@ -2,7 +2,7 @@ data:
   train_ratio: 0.85
   test_val_ratio: 0.35
   data_dir: /root/dataset/dataset
-  dataset_name: "Ita-PVS"     # "Ita-PVS" | "Neurovoz" | "Addresso"
+  dataset_name: "Addresso"     # "Ita-PVS" | "Neurovoz" | "Addresso"
   target_sr: 16000
   mono: true
   normalize: "peak"           # "peak" | "rms"
@@ -12,13 +12,13 @@ data:
   label_map: { healthy: 0, alzheimer: 1 }
 
 model:
-  dropout: 0.35                             # Aumentato per dataset piccolo (prevenire overfitting)
+  dropout: 0.5                             # Aumentato per dataset piccolo (prevenire overfitting)
   branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [128, 64, 32]           # POTENZIATA: architettura più profonda per features complesse
-    dropout: 0.4                           # RIDOTTO: più apprendimento per MLP classico
+    hidden_layers: [64, 32]           # POTENZIATA: architettura più profonda per features complesse
+    dropout: 0.5                           # RIDOTTO: più apprendimento per MLP classico
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
@@ -40,15 +40,15 @@ features:
     spectral_features: true                # Features spettrali aggiuntive
     zero_crossing_rate: true               # Tasso attraversamento zero
   spectrogram:
-    n_mels: 32                             # Ridotto per dataset piccolo (meno complessità)
-    n_fft: 256                             # Ridotto per evitare overfitting
+    n_mels: 16                             # Ridotto per dataset piccolo (meno complessità)
+    n_fft: 128                             # Ridotto per evitare overfitting
     hop_length: 128                        # Valore standard ottimizzato
     log: true
   transformers:
     model_name: "facebook/wav2vec2-base-960h"     # Miglior modello dai test (83.05% accuracy)
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: false                      # Unfreeze per fine-tuning completo
-    max_length: 48000                          # Ridotto per dataset piccolo (3s * 16kHz)
+    max_length: 32000                          # Ridotto per dataset piccolo (3s * 16kHz)
     layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
@@ -59,10 +59,10 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 12                              # AUMENTATO: MLP classico ha bisogno di più epoche per convergere
-  batch_size: 24                           # Ridotto per dataset piccolo (migliore gradiente)
+  epochs: 5                              # AUMENTATO: MLP classico ha bisogno di più epoche per convergere
+  batch_size: 8                           # Ridotto per dataset piccolo (migliore gradiente)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.0003                          # AUMENTATO: MLP classico ha bisogno di learning rate più alto
+  max_lr: 0.0001                          # AUMENTATO: MLP classico ha bisogno di learning rate più alto
   min_lr: 0.000003                        # Min LR proporzionale (1/100 del max)
   warmup_ratio: 0.3                       # Warmup ridotto per MLP più semplice
   weight_decay: 0.05                      # RIDOTTO: MLP classico ha meno parametri, meno regolarizzazione
@@ -73,6 +73,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.20                     # Ridotto per massimizzare training data (800*0.85=680 train)
+  validation_split: 0.15                     # Ridotto per massimizzare training data (800*0.85=680 train)
 
 plot: [accuracy, loss]
