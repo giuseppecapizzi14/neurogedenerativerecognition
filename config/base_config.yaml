@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"       # "waveform" | "spectrogram"
   mlp:
-    hidden: [256, 128]                    # Architettura più profonda per 90% accuracy
-    dropout: 0.2                               # Dropout più alto per prevenire overfitting
+    hidden: [384, 192]                    # Architettura bilanciata per prestazioni/velocità
+    dropout: 0.25                         # Dropout ottimizzato per prevenire overfitting
   svm:
     kernel: "rbf"
     C: 1.0
@@ -32,16 +32,16 @@ features:
     pitch: false
     jitter_shimmer: true
   spectrogram:
-    n_mels: 32                             # Ridotto da 64 per velocità
-    n_fft: 256                             # Ridotto da 400 per velocità  
-    hop_length: 128                        # Ridotto da 160 per velocità
+    n_mels: 40                             # Aumentato per migliori feature mantenendo velocità
+    n_fft: 320                             # Aumentato moderatamente per risoluzione migliore
+    hop_length: 160                        # Valore standard per buon compromesso
     log: true
   transformers:
-    model_name: "facebook/wav2vec2-base-960h"   # Modello più leggero per velocità
+    model_name: "facebook/wav2vec2-base-960h"   # Modello bilanciato per prestazioni/velocità
     pooling: "mean"                             # "cls" | "mean"
-    freeze_backbone: true                       # Congela backbone per velocità
-    max_length: 48000                          # Limita lunghezza input (3s * 16kHz)
-    layer: -2                                  # Usa layer intermedio invece dell'ultimo
+    freeze_backbone: false                      # Unfreeze per migliori prestazioni
+    max_length: 56000                          # Aumentato leggermente per più contesto (3.5s * 16kHz)
+    layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
                                                 # - ALM/wav2vec2-base-audioset
@@ -51,12 +51,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25 # Ridotto per training veloce mantenendo accuracy
-  batch_size: 64                           # Batch size ottimale per transformers+mlp
-  optimizer: adam
-  max_lr: 0.001                            # Learning rate più conservativo per stabilità
-  min_lr: 0.00001                         # Min LR molto basso per fine-tuning preciso
-  warmup_ratio: 0.15                      # Warmup più lungo per convergenza stabile
+  epochs: 30 # Aumentato per migliore convergenza mantenendo velocità
+  batch_size: 56                           # Ridotto leggermente per gradiente più preciso
+  optimizer: adamw                         # AdamW per migliore regolarizzazione
+  max_lr: 0.0012                          # LR leggermente aumentato per convergenza più veloce
+  min_lr: 0.000012                        # Min LR proporzionale
+  warmup_ratio: 0.12                      # Warmup ridotto per training più veloce
+  weight_decay: 0.005                     # Regolarizzazione L2 moderata
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
