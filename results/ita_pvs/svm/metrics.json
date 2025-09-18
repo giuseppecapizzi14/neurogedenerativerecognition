@@ -1,0 +1,47 @@
+{
+  "model_name": "SVM",
+  "dataset_name": "Ita-PVS",
+  "model_settings": {
+    "C": 10.0,
+    "kernel": "linear",
+    "gamma": "scale",
+    "class_weight": "balanced",
+    "validation_loss": 0.055442545868819595,
+    "n_features": 147
+  },
+  "metrics": {
+    "accuracy": 0.9746835443037974,
+    "precision": 0.9760520013684569,
+    "recall": 0.9746835443037974,
+    "f1_score": 0.9747407843522062,
+    "sensitivity": 0.9545454545454546,
+    "specificity": 1.0
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.9459459459459459,
+      "recall": 1.0,
+      "f1-score": 0.9722222222222222,
+      "support": 70.0
+    },
+    "parkinson": {
+      "precision": 1.0,
+      "recall": 0.9545454545454546,
+      "f1-score": 0.9767441860465116,
+      "support": 88.0
+    },
+    "accuracy": 0.9746835443037974,
+    "macro avg": {
+      "precision": 0.972972972972973,
+      "recall": 0.9772727272727273,
+      "f1-score": 0.974483204134367,
+      "support": 158.0
+    },
+    "weighted avg": {
+      "precision": 0.9760520013684569,
+      "recall": 0.9746835443037974,
+      "f1-score": 0.9747407843522062,
+      "support": 158.0
+    }
+  }
+}
