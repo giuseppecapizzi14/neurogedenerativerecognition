@@ -1,0 +1,52 @@
+{
+  "model_name": "Transformers+MLP_microsoft_wavlm-base-plus",
+  "dataset_name": "Neurovoz",
+  "model_settings": {
+    "transformer_model": "microsoft/wavlm-base-plus",
+    "hidden_layers": [
+      512,
+      256,
+      128
+    ],
+    "dropout": 0.3,
+    "learning_rate": 0.0008,
+    "epochs": 25,
+    "batch_size": 48,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.7667785234899329,
+    "precision": 0.7672818791946309,
+    "recall": 0.7667785234899329,
+    "f1_score": 0.76685537785781,
+    "sensitivity": 0.7735191637630662,
+    "specificity": 0.7605177993527508
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.7833333333333333,
+      "recall": 0.7605177993527508,
+      "f1-score": 0.7717569786535303,
+      "support": 309.0
+    },
+    "parkinson": {
+      "precision": 0.75,
+      "recall": 0.7735191637630662,
+      "f1-score": 0.7615780445969125,
+      "support": 287.0
+    },
+    "accuracy": 0.7667785234899329,
+    "macro avg": {
+      "precision": 0.7666666666666666,
+      "recall": 0.7670184815579084,
+      "f1-score": 0.7666675116252214,
+      "support": 596.0
+    },
+    "weighted avg": {
+      "precision": 0.7672818791946309,
+      "recall": 0.7667785234899329,
+      "f1-score": 0.76685537785781,
+      "support": 596.0
+    }
+  }
+}
