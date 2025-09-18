@@ -21,24 +21,24 @@ model:
     dropout: 0.6                           # ⬆️ Aumentato per prevenire overfitting severo
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
-    kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
-    C: 1.0                                 # ⬇️ Ulteriormente ridotto per meno overfitting
-    gamma: "scale"                         # Scale per bilanciamento migliore
+    kernel: "rbf"                          # 🎯 CAMBIATO: RBF per pattern non-lineari più complessi
+    C: 10.0                                # ⬆️ AUMENTATO: più flessibilità per 80% accuracy target
+    gamma: "auto"                          # 🎯 CAMBIATO: auto per dataset piccolo (1/n_features)
     class_weight: "balanced"               # CRITICO: bilancia classi sbilanciate
 
 features:
   classical:
-    n_mfcc: 20                             # Aumentato per più informazioni
+    n_mfcc: 20                             # ⬆️ AUMENTATO: più coefficienti per dettagli audio
     mfcc_delta: true                       # Delta features per dinamica temporale
     mfcc_delta2: true                      # Delta-delta per accelerazione
-    energy: true                           # Energia RMS
-    pitch: true                            # Pitch fondamentale (importante per voce)
-    pitch_method: "pyin"                   # Metodo PYIN per pitch robusto
-    pitch_fmin: 50                         # Frequenza minima pitch (voce umana)
-    pitch_fmax: 400                        # Frequenza massima pitch
-    jitter_shimmer: true                   # Variabilità pitch e ampiezza
-    spectral_features: true                # Features spettrali aggiuntive
+    chroma: true                           # Features armoniche
+    spectral_centroid: true                # Centro spettrale
+    spectral_bandwidth: true               # Larghezza banda spettrale
+    spectral_rolloff: true                 # Rolloff spettrale
+    spectral_features: true                # ⬆️ Features spettrali aggiuntive per più informazioni
     zero_crossing_rate: true               # Tasso attraversamento zero
+    rms_energy: true                       # ⬆️ AGGIUNTO: energia RMS per intensità audio
+    tempo: true                            # ⬆️ AGGIUNTO: tempo per ritmo audio
   spectrogram:
     n_mels: 16                             # ⬇️ Ridotto da 32 per dataset piccolo (meno complessità)
     n_fft: 128                             # ⬇️ Ridotto da 256 per evitare overfitting
