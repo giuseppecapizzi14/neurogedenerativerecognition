@@ -397,8 +397,23 @@ def train_transformers_mlp(cfg, dataset):
     num_classes = 2  # healthy (0) e parkinson (1)
     mlp_head = MLP(embedding_dim, num_classes, cfg).to(device)
     
+    # Calcola class weights se specificato nella configurazione
+    class_weights = None
+    if 'class_weight' in cfg['model']['mlp'] and cfg['model']['mlp']['class_weight'] == 'balanced':
+        # Calcola distribuzione classi nel training set
+        train_labels = []
+        for batch in train_loader:
+            train_labels.extend(batch['label'].tolist())
+        
+        # Calcola class weights bilanciati
+        from sklearn.utils.class_weight import compute_class_weight
+        classes = np.unique(train_labels)
+        weights = compute_class_weight('balanced', classes=classes, y=train_labels)
+        class_weights = torch.FloatTensor(weights).to(device)
+        print(f"🎯 Class weights calcolati: {class_weights}")
+    
     # Training setup
-    criterion = CrossEntropyLoss()
+    criterion = CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.Adam(mlp_head.parameters(), lr=cfg['training'].get('max_lr', 0.001))
     
     print(f"📊 Training con validation loss monitoring")

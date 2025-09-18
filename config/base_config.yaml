@@ -19,6 +19,7 @@ model:
   mlp:
     hidden_layers: [32, 16]                # Architettura MINIMA per combattere overfitting estremo
     dropout: 0.6                           # Regolarizzazione ottimizzata per target 80-85% (ridotta da 0.5)
+    class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
     C: 10.0                                # Aumentato per più flessibilità
