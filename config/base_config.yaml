@@ -18,7 +18,7 @@ model:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
     hidden_layers: [32, 16]                # Architettura MINIMA per combattere overfitting estremo
-    dropout: 0.6                           # ANTI-OVERFITTING: aumentato per modelli potenti (HuBERT, ALM)
+    dropout: 0.6                           # OTTIMALE: bilanciato per target ~80% accuracy
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
@@ -59,13 +59,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 8                               # ANTI-OVERFITTING: ridotte per modelli potenti (HuBERT, ALM)
+  epochs: 8                               # OTTIMALE: come suggerito dall'utente per convergenza completa
   batch_size: 24                           # Ridotto per dataset piccolo (migliore gradiente)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.00003                         # ANTI-OVERFITTING: ridotto per modelli potenti
+  max_lr: 0.00007                         # BILANCIATO: aumentato per raggiungere ~80% accuracy
   min_lr: 0.000001                        # Min LR proporzionale (1/100 del max)
   warmup_ratio: 0.4                       # Warmup aumentato per convergenza più graduale
-  weight_decay: 0.2                       # ANTI-OVERFITTING: aumentato per modelli potenti
+  weight_decay: 0.12                      # BILANCIATO: ridotto per permettere apprendimento migliore
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
