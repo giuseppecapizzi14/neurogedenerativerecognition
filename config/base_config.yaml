@@ -13,7 +13,7 @@ data:
 
 model:
   dropout: 0.35                             # Aumentato per dataset piccolo (prevenire overfitting)
-  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
@@ -58,7 +58,7 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 35                               # Aumentato per dataset piccolo (più iterazioni necessarie)
+  epochs: 15                               # Aumentato per dataset piccolo (più iterazioni necessarie)
   batch_size: 32                           # Ridotto per dataset piccolo (800/32 = 25 batch)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
   max_lr: 0.0005                          # LR ridotto per convergenza più stabile
