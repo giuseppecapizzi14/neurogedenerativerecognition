@@ -100,28 +100,6 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
             # In caso di errore, aggiungi valori zero
             features.extend([0, 0])
     
-    # Features spettrali aggiuntive
-    if cfg['features']['classical'].get('spectral_features', False):
-        # Spectral centroid
-        spectral_centroids = librosa.feature.spectral_centroid(y=audio, sr=sr)
-        features.extend([np.mean(spectral_centroids), np.std(spectral_centroids)])
-        
-        # Spectral rolloff
-        spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sr)
-        features.extend([np.mean(spectral_rolloff), np.std(spectral_rolloff)])
-        
-        # Spectral bandwidth
-        spectral_bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sr)
-        features.extend([np.mean(spectral_bandwidth), np.std(spectral_bandwidth)])
-        
-        # Spectral contrast
-        spectral_contrast = librosa.feature.spectral_contrast(y=audio, sr=sr)
-        features.extend(np.mean(spectral_contrast, axis=1).tolist())
-        
-        # Spectral flatness
-        spectral_flatness = librosa.feature.spectral_flatness(y=audio)
-        features.extend([np.mean(spectral_flatness), np.std(spectral_flatness)])
-    
     # Zero crossing rate
     if cfg['features']['classical'].get('zero_crossing_rate', False):
         zcr = librosa.feature.zero_crossing_rate(audio)
@@ -157,6 +135,16 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
         features.extend([np.mean(spectral_rolloff), np.std(spectral_rolloff)])
     
     # Converti a array e gestisci valori NaN/Inf
+    # Debug: verifica che tutte le features siano scalari
+    for i, feat in enumerate(features):
+        if hasattr(feat, '__len__') and not isinstance(feat, (str, bytes)):
+            print(f"Warning: Feature {i} is not scalar: {type(feat)}, shape: {getattr(feat, 'shape', 'no shape')}")
+            # Converti array/liste annidate in scalari
+            if hasattr(feat, 'item'):
+                features[i] = feat.item()
+            elif isinstance(feat, (list, tuple)) and len(feat) == 1:
+                features[i] = feat[0]
+    
     features_array = np.array(features, dtype=np.float32)
     
     # Sostituisci NaN e Inf con 0

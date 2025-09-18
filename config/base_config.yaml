@@ -35,7 +35,6 @@ features:
     spectral_centroid: true                # Centro spettrale
     spectral_bandwidth: true               # Larghezza banda spettrale
     spectral_rolloff: true                 # Rolloff spettrale
-    spectral_features: true                # ⬆️ Features spettrali aggiuntive per più informazioni
     zero_crossing_rate: true               # Tasso attraversamento zero
     rms_energy: true                       # ⬆️ AGGIUNTO: energia RMS per intensità audio
     tempo: true                            # ⬆️ AGGIUNTO: tempo per ritmo audio
