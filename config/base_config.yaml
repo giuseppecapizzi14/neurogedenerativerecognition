@@ -2,7 +2,7 @@ data:
   train_ratio: 0.85
   test_val_ratio: 0.35
   data_dir: /root/dataset/dataset
-  dataset_name: "Neurovoz"     # "Ita-PVS" | "Neurovoz" | "Addresso"
+  dataset_name: "Ita-PVS"     # "Ita-PVS" | "Neurovoz" | "Addresso"
   target_sr: 16000
   mono: true
   normalize: "peak"           # "peak" | "rms"
@@ -12,17 +12,17 @@ data:
   label_map: { healthy: 0, parkinson: 1 }
 
 model:
-  dropout: 0.25
-  branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  dropout: 0.35                             # Aumentato per dataset piccolo (prevenire overfitting)
+  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
-    in_type: "waveform"       # "waveform" | "spectrogram"
+    in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden: [512, 256, 128]                 # Architettura più profonda per catturare pattern complessi
-    dropout: 0.3                           # Dropout aumentato per prevenire overfitting
+    hidden_layers: [384, 192]               # Ridotto per dataset piccolo (800 campioni)
+    dropout: 0.4                            # Aumentato per prevenire overfittingprevenire overfitting
   svm:
-    kernel: "rbf"
-    C: 1.0
-    gamma: "scale"
+    kernel: "rbf"                          # RBF kernel per non-linearità
+    C: 0.1                                 # Ridotto per più regolarizzazione (dataset piccolo)
+    gamma: "auto"                          # Auto per evitare overfitting
 
 features:
   classical:
@@ -32,15 +32,15 @@ features:
     pitch: false
     jitter_shimmer: true
   spectrogram:
-    n_mels: 40                             # Aumentato per migliori feature mantenendo velocità
-    n_fft: 320                             # Aumentato moderatamente per risoluzione migliore
-    hop_length: 160                        # Valore standard per buon compromesso
+    n_mels: 32                             # Ridotto per dataset piccolo (meno complessità)
+    n_fft: 256                             # Ridotto per evitare overfitting
+    hop_length: 128                        # Valore standard ottimizzato
     log: true
   transformers:
-    model_name: "microsoft/wavlm-base"     # Modello più potente per migliori prestazioni
+    model_name: "facebook/wav2vec2-base-960h"     # Miglior modello dai test (83.05% accuracy)
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: false                      # Unfreeze per fine-tuning completo
-    max_length: 64000                          # Aumentato per catturare più contesto (4s * 16kHz)
+    max_length: 48000                          # Ridotto per dataset piccolo (3s * 16kHz)
     layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
@@ -51,13 +51,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25 # Aumentato significativamente per migliore convergenza
-  batch_size: 48                           # Ridotto per gradiente più stabile
+  epochs: 35                               # Aumentato per dataset piccolo (più iterazioni necessarie)
+  batch_size: 32                           # Ridotto per dataset piccolo (800/32 = 25 batch)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.0008                          # LR ridotto per convergenza più stabile
-  min_lr: 0.000008                        # Min LR proporzionale
-  warmup_ratio: 0.2                       # Warmup aumentato per convergenza graduale
-  weight_decay: 0.01                      # Regolarizzazione L2 più forte
+  max_lr: 0.0005                          # LR ridotto per convergenza più stabile
+  min_lr: 0.000005                        # Min LR proporzionale
+  warmup_ratio: 0.25                      # Warmup aumentato per dataset piccolo
+  weight_decay: 0.015                     # Regolarizzazione L2 più forte per overfitting
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
@@ -65,6 +65,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.2                     # Ridotto per più dati di training
+  validation_split: 0.15                     # Ridotto per massimizzare training data (800*0.85=680 train)
 
 plot: [accuracy, loss]
