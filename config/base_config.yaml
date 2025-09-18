@@ -12,17 +12,17 @@ data:
   label_map: { healthy: 0, alzheimer: 1 }
 
 model:
-  dropout: 0.5                             # Aumentato per dataset piccolo (prevenire overfitting)
+  dropout: 0.5                              # ⬆️ Aumentato da 0.35 per prevenire overfitting su dataset piccolo
   branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [64, 32]           # POTENZIATA: architettura più profonda per features complesse
-    dropout: 0.5                           # RIDOTTO: più apprendimento per MLP classico
+    hidden_layers: [64, 32]                # ⬇️ Semplificato da [128,64,32] per dataset piccolo
+    dropout: 0.5                           # ⬆️ Aumentato da 0.4 per prevenire overfitting
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
-    C: 10.0                                # Aumentato per più flessibilità
+    C: 5.0                                 # ⬇️ Ridotto da 10.0 per meno overfitting
     gamma: "scale"                         # Scale per bilanciamento migliore
     class_weight: "balanced"               # CRITICO: bilancia classi sbilanciate
 
@@ -40,15 +40,15 @@ features:
     spectral_features: true                # Features spettrali aggiuntive
     zero_crossing_rate: true               # Tasso attraversamento zero
   spectrogram:
-    n_mels: 16                             # Ridotto per dataset piccolo (meno complessità)
-    n_fft: 128                             # Ridotto per evitare overfitting
+    n_mels: 16                             # ⬇️ Ridotto da 32 per dataset piccolo (meno complessità)
+    n_fft: 128                             # ⬇️ Ridotto da 256 per evitare overfitting
     hop_length: 128                        # Valore standard ottimizzato
     log: true
   transformers:
     model_name: "facebook/wav2vec2-base-960h"     # Miglior modello dai test (83.05% accuracy)
     pooling: "mean"                             # "cls" | "mean"
     freeze_backbone: false                      # Unfreeze per fine-tuning completo
-    max_length: 32000                          # Ridotto per dataset piccolo (3s * 16kHz)
+    max_length: 32000                          # ⬇️ Ridotto da 48000 per dataset piccolo (2s * 16kHz)
     layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
@@ -59,11 +59,11 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 5                              # AUMENTATO: MLP classico ha bisogno di più epoche per convergere
-  batch_size: 8                           # Ridotto per dataset piccolo (migliore gradiente)
+  epochs: 8                               # ⬇️ Ridotto da 12 per evitare overfitting su dataset piccolo
+  batch_size: 8                           # ⬇️ Ridotto da 24 per gradiente più stabile
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.0001                          # AUMENTATO: MLP classico ha bisogno di learning rate più alto
-  min_lr: 0.000003                        # Min LR proporzionale (1/100 del max)
+  max_lr: 0.0001                          # ⬇️ Ridotto da 0.0003 per apprendimento più cauto
+  min_lr: 0.000001                        # ⬇️ Min LR proporzionale (1/100 del max)
   warmup_ratio: 0.3                       # Warmup ridotto per MLP più semplice
   weight_decay: 0.05                      # RIDOTTO: MLP classico ha meno parametri, meno regolarizzazione
   checkpoint_dir: checkpoints/
@@ -73,6 +73,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.15                     # Ridotto per massimizzare training data (800*0.85=680 train)
+  validation_split: 0.15                     # ⬇️ Ridotto da 0.20 per massimizzare training data
 
 plot: [accuracy, loss]

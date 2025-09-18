@@ -103,9 +103,20 @@ class AudioDataset(Dataset[Sample]):
         if os.path.exists(labels_path):
             # Carica labels esistenti
             df = pd.read_csv(labels_path)
-            # Filtra per split se il dataset ha split predefiniti
+            
+            # Controlla se il dataset ha split predefiniti ma il file non ha la colonna split
             if self.dataset_config.get('has_predefined_splits', False):
-                df = df[df['split'] == self.split]
+                if 'split' not in df.columns:
+                    print(f"⚠️  File labels.csv esistente non ha colonna 'split'. Rigenerazione necessaria...")
+                    # Elimina il file esistente per forzare la rigenerazione
+                    os.remove(labels_path)
+                    # Ricorsione per rigenerare
+                    self._load_or_generate_labels()
+                    return
+                else:
+                    # Filtra per split se la colonna esiste
+                    df = df[df['split'] == self.split]
+            
             # Normalizza i path separators per compatibilità cross-platform
             self.audio_files = [os.path.normpath(filepath.replace('\\', '/')) for filepath in df['filepath'].tolist()]
             self.labels = df['label_id'].tolist()
