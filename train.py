@@ -514,7 +514,7 @@ def train_transformers_mlp(cfg, dataset):
         dataset_name=cfg['data']['dataset_name'],
         model_config={
             'transformer_model': cfg['features']['transformers']['model_name'],
-            'hidden_layers': cfg['model']['mlp']['hidden'],
+            'hidden_layers': cfg['model']['mlp']['hidden_layers'],
             'dropout': cfg['model']['mlp']['dropout'],
             'learning_rate': cfg['training']['max_lr'],
             'epochs': cfg['training']['epochs'],

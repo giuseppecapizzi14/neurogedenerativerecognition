@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [384, 192]               # Ridotto per dataset piccolo (800 campioni)
-    dropout: 0.4                            # Aumentato per prevenire overfittingprevenire overfitting
+    hidden_layers: [512, 256, 128]         # Architettura più profonda per maggiore capacità
+    dropout: 0.35                          # Dropout ridotto per permettere più apprendimento
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
     C: 10.0                                # Aumentato per più flessibilità
@@ -58,11 +58,11 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 15                               # Aumentato per dataset piccolo (più iterazioni necessarie)
+  epochs: 20                               # Aumentato per permettere maggiore convergenza
   batch_size: 32                           # Ridotto per dataset piccolo (800/32 = 25 batch)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.0005                          # LR ridotto per convergenza più stabile
-  min_lr: 0.000005                        # Min LR proporzionale
+  max_lr: 0.0008                          # LR leggermente aumentato per convergenza più veloce
+  min_lr: 0.000008                        # Min LR proporzionale
   warmup_ratio: 0.25                      # Warmup aumentato per dataset piccolo
   weight_decay: 0.015                     # Regolarizzazione L2 più forte per overfitting
   checkpoint_dir: checkpoints/
