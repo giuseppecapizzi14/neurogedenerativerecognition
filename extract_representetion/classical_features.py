@@ -28,23 +28,23 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
     mfccs = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=n_mfcc)
     
     # Statistiche MFCC (mean, std)
-    features.extend(np.mean(mfccs, axis=1))
-    features.extend(np.std(mfccs, axis=1))
+    features.extend(np.mean(mfccs, axis=1).tolist())
+    features.extend(np.std(mfccs, axis=1).tolist())
     
     # Delta MFCC (se richiesto)
     if cfg['features']['classical']['mfcc_delta']:
         delta_mfccs = librosa.feature.delta(mfccs)
-        features.extend(np.mean(delta_mfccs, axis=1))
-        features.extend(np.std(delta_mfccs, axis=1))
+        features.extend(np.mean(delta_mfccs, axis=1).tolist())
+        features.extend(np.std(delta_mfccs, axis=1).tolist())
     
     # Delta-Delta MFCC (se richiesto)
     if cfg['features']['classical'].get('mfcc_delta2', False):
         delta2_mfccs = librosa.feature.delta(mfccs, order=2)
-        features.extend(np.mean(delta2_mfccs, axis=1))
-        features.extend(np.std(delta2_mfccs, axis=1))
+        features.extend(np.mean(delta2_mfccs, axis=1).tolist())
+        features.extend(np.std(delta2_mfccs, axis=1).tolist())
     
     # Energia (RMS)
-    if cfg['features']['classical']['energy']:
+    if cfg['features']['classical']['rms_energy']:
         rms = librosa.feature.rms(y=audio)
         features.extend([np.mean(rms), np.std(rms)])
     
@@ -116,7 +116,7 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
         
         # Spectral contrast
         spectral_contrast = librosa.feature.spectral_contrast(y=audio, sr=sr)
-        features.extend(np.mean(spectral_contrast, axis=1))
+        features.extend(np.mean(spectral_contrast, axis=1).tolist())
         
         # Spectral flatness
         spectral_flatness = librosa.feature.spectral_flatness(y=audio)
@@ -138,8 +138,8 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
     # Chroma features (se richiesto)
     if cfg['features']['classical'].get('chroma', False):
         chroma = librosa.feature.chroma_stft(y=audio, sr=sr)
-        features.extend(np.mean(chroma, axis=1))
-        features.extend(np.std(chroma, axis=1))
+        features.extend(np.mean(chroma, axis=1).tolist())
+        features.extend(np.std(chroma, axis=1).tolist())
     
     # Spectral centroid (se richiesto)
     if cfg['features']['classical'].get('spectral_centroid', False):
