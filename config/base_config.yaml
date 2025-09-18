@@ -9,7 +9,7 @@ data:
   fixed_duration_s: 5.0
   resample: true
   pad_mode: "silence"         # zeri
-  label_map: { healthy: 0, parkinson: 1 }
+  label_map: { healthy: 0, alzheimer: 1 }
 
 model:
   dropout: 0.35                             # Aumentato per dataset piccolo (prevenire overfitting)

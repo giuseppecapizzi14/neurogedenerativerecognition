@@ -64,7 +64,8 @@ class AudioDataset(Dataset[Sample]):
         "Addresso": {
             "label_dict": {"healthy": 0, "alzheimer": 1},
             "file_pattern": ".wav",
-            "label_extractor": lambda filename: "healthy" if "healthy" in filename else "alzheimer"
+            "label_extractor": lambda filepath: "healthy" if "healthy" in filepath else "alzheimer",
+            "has_predefined_splits": True  # Indica che train/test sono già separati
         }
     }
 
@@ -102,43 +103,86 @@ class AudioDataset(Dataset[Sample]):
         if os.path.exists(labels_path):
             # Carica labels esistenti
             df = pd.read_csv(labels_path)
+            # Filtra per split se il dataset ha split predefiniti
+            if self.dataset_config.get('has_predefined_splits', False):
+                df = df[df['split'] == self.split]
             # Normalizza i path separators per compatibilità cross-platform
             self.audio_files = [os.path.normpath(filepath.replace('\\', '/')) for filepath in df['filepath'].tolist()]
             self.labels = df['label_id'].tolist()
-            # Carica labels esistenti
         else:
             # Genera labels.csv
             self.audio_files = []
             self.labels = []
             label_texts = []
+            splits = []
             
             print(f"Scanning dataset directory: {self.data_dir}")
-            for root, _, files in os.walk(self.data_dir):
-                for file in files:
-                    if file.endswith(self.dataset_config['file_pattern']):
-                        filepath = os.path.join(root, file)
-                        # Normalizza i path separators per compatibilità cross-platform
-                        filepath = os.path.normpath(filepath.replace('\\', '/'))
-                        
-                        # Estrai label dal filepath completo
-                        label_text = self.dataset_config['label_extractor'](filepath)
-                        if label_text in self.dataset_config['label_dict']:
-                            label_id = self.dataset_config['label_dict'][label_text]
+            
+            # Gestione speciale per dataset con split predefiniti (come Addresso)
+            if self.dataset_config.get('has_predefined_splits', False):
+                # Scansiona train_set e test_set separatamente
+                for split_name in ['train_set', 'test_set']:
+                    split_dir = os.path.join(self.data_dir, split_name)
+                    if os.path.exists(split_dir):
+                        for root, _, files in os.walk(split_dir):
+                            for file in files:
+                                if file.endswith(self.dataset_config['file_pattern']):
+                                    filepath = os.path.join(root, file)
+                                    # Normalizza i path separators per compatibilità cross-platform
+                                    filepath = os.path.normpath(filepath.replace('\\', '/'))
+                                    
+                                    # Estrai label dal filepath completo
+                                    label_text = self.dataset_config['label_extractor'](filepath)
+                                    if label_text in self.dataset_config['label_dict']:
+                                        label_id = self.dataset_config['label_dict'][label_text]
+                                        
+                                        self.audio_files.append(filepath)
+                                        self.labels.append(label_id)
+                                        label_texts.append(label_text)
+                                        # Mappa train_set -> train, test_set -> test
+                                        split_mapped = 'train' if split_name == 'train_set' else 'test'
+                                        splits.append(split_mapped)
+            else:
+                # Gestione normale per dataset senza split predefiniti
+                for root, _, files in os.walk(self.data_dir):
+                    for file in files:
+                        if file.endswith(self.dataset_config['file_pattern']):
+                            filepath = os.path.join(root, file)
+                            # Normalizza i path separators per compatibilità cross-platform
+                            filepath = os.path.normpath(filepath.replace('\\', '/'))
                             
-                            self.audio_files.append(filepath)
-                            self.labels.append(label_id)
-                            label_texts.append(label_text)
+                            # Estrai label dal filepath completo
+                            label_text = self.dataset_config['label_extractor'](filepath)
+                            if label_text in self.dataset_config['label_dict']:
+                                label_id = self.dataset_config['label_dict'][label_text]
+                                
+                                self.audio_files.append(filepath)
+                                self.labels.append(label_id)
+                                label_texts.append(label_text)
+                                splits.append('all')  # Sarà gestito dal train_test_split
             
             print(f"Found {len(self.audio_files)} files")
             
             if len(self.audio_files) > 0:
                 # Salva labels.csv
-                df = pd.DataFrame({
+                df_data = {
                     'filepath': self.audio_files,
                     'label_text': label_texts,
                     'label_id': self.labels
-                })
+                }
+                
+                # Aggiungi colonna split solo se necessario
+                if self.dataset_config.get('has_predefined_splits', False):
+                    df_data['split'] = splits
+                
+                df = pd.DataFrame(df_data)
                 df.to_csv(labels_path, index=False)
+                
+                # Filtra per split corrente se necessario
+                if self.dataset_config.get('has_predefined_splits', False):
+                    df_filtered = df[df['split'] == self.split]
+                    self.audio_files = [os.path.normpath(filepath.replace('\\', '/')) for filepath in df_filtered['filepath'].tolist()]
+                    self.labels = df_filtered['label_id'].tolist()
             else:
                 print("❌ Preprocessing fallito: nessun file audio trovato nel dataset.")
                 raise ValueError(f"Nessun file audio trovato nel dataset {self.dataset_name}")
