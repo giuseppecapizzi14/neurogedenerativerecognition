@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [512, 256, 128]         # Architettura più profonda per maggiore capacità
-    dropout: 0.35                          # Dropout ridotto per permettere più apprendimento
+    hidden_layers: [256, 128]              # Architettura più semplice per evitare overfitting
+    dropout: 0.3                           # Dropout ottimizzato per bilanciamento
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
     C: 10.0                                # Aumentato per più flessibilità
@@ -58,13 +58,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 20                               # Aumentato per permettere maggiore convergenza
-  batch_size: 32                           # Ridotto per dataset piccolo (800/32 = 25 batch)
+  epochs: 25                               # Aumentato ulteriormente per convergenza graduale
+  batch_size: 24                           # Ridotto per dataset piccolo (migliore gradiente)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.0008                          # LR leggermente aumentato per convergenza più veloce
-  min_lr: 0.000008                        # Min LR proporzionale
-  warmup_ratio: 0.25                      # Warmup aumentato per dataset piccolo
-  weight_decay: 0.015                     # Regolarizzazione L2 più forte per overfitting
+  max_lr: 0.0006                          # LR ridotto per convergenza più stabile
+  min_lr: 0.000006                        # Min LR proporzionale
+  warmup_ratio: 0.35                      # Warmup aumentato per convergenza graduale
+  weight_decay: 0.02                      # Regolarizzazione aumentata
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
