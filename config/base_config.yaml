@@ -58,7 +58,7 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 15                               # Ridotto da 25 per evitare overtraining
+  epochs: 10                               # Ridotto da 25 per evitare overtraining
   batch_size: 24                           # Ridotto per dataset piccolo (migliore gradiente)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
   max_lr: 0.0003                          # LR dimezzato per convergenza più conservativa
