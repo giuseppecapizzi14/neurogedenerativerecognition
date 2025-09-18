@@ -1,0 +1,50 @@
+{
+  "model_name": "MLP",
+  "dataset_name": "Ita-PVS",
+  "model_settings": {
+    "hidden_layers": [
+      128,
+      64,
+      32
+    ],
+    "dropout": 0.4,
+    "learning_rate": 0.0003,
+    "epochs": 12,
+    "batch_size": 24
+  },
+  "metrics": {
+    "accuracy": 0.8417721518987342,
+    "precision": 0.8416126480195998,
+    "recall": 0.8417721518987342,
+    "f1_score": 0.8408210662968322,
+    "sensitivity": 0.8901098901098901,
+    "specificity": 0.7761194029850746
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.8387096774193549,
+      "recall": 0.7761194029850746,
+      "f1-score": 0.8062015503875969,
+      "support": 67.0
+    },
+    "parkinson": {
+      "precision": 0.84375,
+      "recall": 0.8901098901098901,
+      "f1-score": 0.8663101604278075,
+      "support": 91.0
+    },
+    "accuracy": 0.8417721518987342,
+    "macro avg": {
+      "precision": 0.8412298387096775,
+      "recall": 0.8331146465474824,
+      "f1-score": 0.8362558554077022,
+      "support": 158.0
+    },
+    "weighted avg": {
+      "precision": 0.8416126480195998,
+      "recall": 0.8417721518987342,
+      "f1-score": 0.8408210662968322,
+      "support": 158.0
+    }
+  }
+}
