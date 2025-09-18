@@ -11,7 +11,7 @@ class MLP(nn.Module):
     def __init__(self, input_dim: int, num_classes: int, cfg: Dict[str, Any]):
         super().__init__()
         
-        hidden_dims = cfg['model']['mlp']['hidden']
+        hidden_dims = cfg['model']['mlp']['hidden_layers']
         dropout_rate = cfg['model']['mlp']['dropout']
         
         layers = []
