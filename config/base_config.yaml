@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [256, 128, 64, 32]     # Architettura piu profonda: 4 layers per 183 features
-    dropout: 0.2                          # Ridotto drasticamente: 0.3 ancora troppo per convergenza
+    hidden_layers: [32, 16]              # Architettura più semplice per dataset piccolo
+    dropout: 0.1                           # Dropout molto basso per evitare underfitting
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "rbf"                          # Cambiato: RBF per pattern non-lineari piu complessi
@@ -63,13 +63,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 15                              # Ottimale per dataset piccolo: evita overfitting
-  batch_size: 32                          # Ridotto per dataset piccolo (22 campioni test)
-  lr: 0.0005                              # LR più conservativo per convergenza stabile
-  max_lr: 0.001                           # Scheduler più conservativo
-  min_lr: 0.00001                         # LR minimo per fine-tuning preciso
-  warmup_ratio: 0.15                      # Warmup aumentato per stabilità
-  weight_decay: 0.02                      # Più regolarizzazione per evitare overfitting
+  epochs: 20                              # Aumentato: modello predice solo classe 1
+  batch_size: 16                          # Ridotto per dataset molto piccolo (22 test samples)
+  lr: 0.0003                              # LR molto più basso per convergenza graduale
+  max_lr: 0.0008                          # Scheduler più conservativo
+  min_lr: 0.000005                        # LR minimo molto basso
+  warmup_ratio: 0.2                       # Warmup più lungo per stabilità
+  weight_decay: 0.05                      # Regolarizzazione molto alta per overfitting
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
