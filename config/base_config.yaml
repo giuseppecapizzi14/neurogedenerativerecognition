@@ -12,13 +12,13 @@ data:
   label_map: { healthy: 0, alzheimer: 1 }
 
 model:
-  dropout: 0.6                            # Aumentato ulteriormente per combattere overfitting
+  dropout: 0.3                            # Bilanciato per evitare underfitting severo
   branch: "classical_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [128, 64, 32]           # Architettura piu profonda per 183 features
-    dropout: 0.3                           # Ridotto: 0.6 era troppo aggressivo
+    hidden_layers: [256, 128, 64, 32]     # Architettura piu profonda: 4 layers per 183 features
+    dropout: 0.2                          # Ridotto drasticamente: 0.3 ancora troppo per convergenza
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "rbf"                          # Cambiato: RBF per pattern non-lineari piu complessi
@@ -63,13 +63,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 8                              # Aumentato per convergenza migliore con architettura piu profonda
-  batch_size: 8                           # Aumentato per stabilita gradiente con piu layer
-  lr: 0.001                               # Aumentato: learning rate piu alto per MLP
-  max_lr: 0.005                           # Aumentato proporzionalmente
-  min_lr: 0.00001                         # Min LR proporzionale
-  warmup_ratio: 0.3                       # Warmup ridotto per convergenza piu rapida
-  weight_decay: 0.01                      # Ridotto: meno regolarizzazione con dropout 0.3
+  epochs: 30                             # Aumentato drasticamente: architettura profonda richiede piu tempo
+  batch_size: 16                         # Aumentato per stabilita con 4 layers
+  lr: 0.003                              # Aumentato: learning rate aggressivo per superare underfitting
+  max_lr: 0.01                           # Aumentato proporzionalmente per cicli LR
+  min_lr: 0.0001                         # Min LR piu alto per evitare stagnazione
+  warmup_ratio: 0.2                      # Warmup ridotto per convergenza immediata
+  weight_decay: 0.005                    # Ridotto ulteriormente: meno regolarizzazione
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
