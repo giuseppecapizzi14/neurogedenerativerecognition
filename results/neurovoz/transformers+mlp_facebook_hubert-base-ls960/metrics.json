@@ -1,0 +1,52 @@
+{
+  "model_name": "Transformers+MLP_facebook_hubert-base-ls960",
+  "dataset_name": "Neurovoz",
+  "model_settings": {
+    "transformer_model": "facebook/hubert-base-ls960",
+    "hidden_layers": [
+      512,
+      256,
+      128
+    ],
+    "dropout": 0.3,
+    "learning_rate": 0.0008,
+    "epochs": 25,
+    "batch_size": 48,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.8036912751677853,
+    "precision": 0.8077497859886081,
+    "recall": 0.8036912751677853,
+    "f1_score": 0.8035370517478796,
+    "sensitivity": 0.8501742160278746,
+    "specificity": 0.7605177993527508
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.8453237410071942,
+      "recall": 0.7605177993527508,
+      "f1-score": 0.8006814310051107,
+      "support": 309.0
+    },
+    "parkinson": {
+      "precision": 0.7672955974842768,
+      "recall": 0.8501742160278746,
+      "f1-score": 0.8066115702479338,
+      "support": 287.0
+    },
+    "accuracy": 0.8036912751677853,
+    "macro avg": {
+      "precision": 0.8063096692457354,
+      "recall": 0.8053460076903127,
+      "f1-score": 0.8036465006265223,
+      "support": 596.0
+    },
+    "weighted avg": {
+      "precision": 0.8077497859886081,
+      "recall": 0.8036912751677853,
+      "f1-score": 0.8035370517478796,
+      "support": 596.0
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "model_name": "Transformers+MLP_facebook_wav2vec2-base-960h",
+  "dataset_name": "Neurovoz",
+  "model_settings": {
+    "transformer_model": "facebook/wav2vec2-base-960h",
+    "hidden_layers": [
+      512,
+      256,
+      128
+    ],
+    "dropout": 0.3,
+    "learning_rate": 0.0008,
+    "epochs": 25,
+    "batch_size": 48,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.6409395973154363,
+    "precision": 0.647671266581606,
+    "recall": 0.6409395973154363,
+    "f1_score": 0.6393587084247626,
+    "sensitivity": 0.7177700348432056,
+    "specificity": 0.56957928802589
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.6848249027237354,
+      "recall": 0.56957928802589,
+      "f1-score": 0.6219081272084805,
+      "support": 309.0
+    },
+    "parkinson": {
+      "precision": 0.6076696165191741,
+      "recall": 0.7177700348432056,
+      "f1-score": 0.65814696485623,
+      "support": 287.0
+    },
+    "accuracy": 0.6409395973154363,
+    "macro avg": {
+      "precision": 0.6462472596214548,
+      "recall": 0.6436746614345478,
+      "f1-score": 0.6400275460323552,
+      "support": 596.0
+    },
+    "weighted avg": {
+      "precision": 0.647671266581606,
+      "recall": 0.6409395973154363,
+      "f1-score": 0.6393587084247626,
+      "support": 596.0
+    }
+  }
+}

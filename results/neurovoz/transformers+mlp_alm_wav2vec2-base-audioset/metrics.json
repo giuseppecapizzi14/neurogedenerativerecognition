@@ -1,0 +1,52 @@
+{
+  "model_name": "Transformers+MLP_ALM_wav2vec2-base-audioset",
+  "dataset_name": "Neurovoz",
+  "model_settings": {
+    "transformer_model": "ALM/wav2vec2-base-audioset",
+    "hidden_layers": [
+      512,
+      256,
+      128
+    ],
+    "dropout": 0.3,
+    "learning_rate": 0.0008,
+    "epochs": 25,
+    "batch_size": 48,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.7919463087248322,
+    "precision": 0.7932392545146775,
+    "recall": 0.7919463087248322,
+    "f1_score": 0.7912958095031732,
+    "sensitivity": 0.7421602787456446,
+    "specificity": 0.8381877022653722
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.7777777777777778,
+      "recall": 0.8381877022653722,
+      "f1-score": 0.8068535825545171,
+      "support": 309.0
+    },
+    "parkinson": {
+      "precision": 0.8098859315589354,
+      "recall": 0.7421602787456446,
+      "f1-score": 0.7745454545454545,
+      "support": 287.0
+    },
+    "accuracy": 0.7919463087248322,
+    "macro avg": {
+      "precision": 0.7938318546683566,
+      "recall": 0.7901739905055084,
+      "f1-score": 0.7906995185499859,
+      "support": 596.0
+    },
+    "weighted avg": {
+      "precision": 0.7932392545146775,
+      "recall": 0.7919463087248322,
+      "f1-score": 0.7912958095031732,
+      "support": 596.0
+    }
+  }
+}
