@@ -13,7 +13,7 @@ data:
 
 model:
   dropout: 0.35                             # Aumentato per dataset piccolo (prevenire overfitting)
-  branch: "classical_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
@@ -72,6 +72,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.15                     # Ridotto per massimizzare training data (800*0.85=680 train)
+  validation_split: 0.20                     # Ridotto per massimizzare training data (800*0.85=680 train)
 
 plot: [accuracy, loss]
