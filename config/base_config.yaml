@@ -20,17 +20,24 @@ model:
     hidden_layers: [384, 192]               # Ridotto per dataset piccolo (800 campioni)
     dropout: 0.4                            # Aumentato per prevenire overfittingprevenire overfitting
   svm:
-    kernel: "rbf"                          # RBF kernel per non-linearità
-    C: 0.1                                 # Ridotto per più regolarizzazione (dataset piccolo)
-    gamma: "auto"                          # Auto per evitare overfitting
+    kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
+    C: 10.0                                # Aumentato per più flessibilità
+    gamma: "scale"                         # Scale per bilanciamento migliore
+    class_weight: "balanced"               # CRITICO: bilancia classi sbilanciate
 
 features:
   classical:
-    n_mfcc: 13
-    mfcc_delta: true
-    energy: true
-    pitch: false
-    jitter_shimmer: true
+    n_mfcc: 20                             # Aumentato per più informazioni
+    mfcc_delta: true                       # Delta features per dinamica temporale
+    mfcc_delta2: true                      # Delta-delta per accelerazione
+    energy: true                           # Energia RMS
+    pitch: true                            # Pitch fondamentale (importante per voce)
+    pitch_method: "pyin"                   # Metodo PYIN per pitch robusto
+    pitch_fmin: 50                         # Frequenza minima pitch (voce umana)
+    pitch_fmax: 400                        # Frequenza massima pitch
+    jitter_shimmer: true                   # Variabilità pitch e ampiezza
+    spectral_features: true                # Features spettrali aggiuntive
+    zero_crossing_rate: true               # Tasso attraversamento zero
   spectrogram:
     n_mels: 32                             # Ridotto per dataset piccolo (meno complessità)
     n_fft: 256                             # Ridotto per evitare overfitting

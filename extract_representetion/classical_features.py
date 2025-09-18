@@ -3,6 +3,7 @@ import librosa
 import parselmouth
 from typing import Dict, Any
 from torch import Tensor
+from sklearn.preprocessing import StandardScaler
 
 
 def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarray:
@@ -15,7 +16,7 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
         cfg: Configurazione
     
     Returns:
-        np.ndarray: Vettore 1D di features
+        np.ndarray: Vettore 1D di features normalizzate
     """
     # Converti a numpy
     audio = waveform.squeeze().numpy()
@@ -36,6 +37,12 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
         features.extend(np.mean(delta_mfccs, axis=1))
         features.extend(np.std(delta_mfccs, axis=1))
     
+    # Delta-Delta MFCC (se richiesto)
+    if cfg['features']['classical'].get('mfcc_delta2', False):
+        delta2_mfccs = librosa.feature.delta(mfccs, order=2)
+        features.extend(np.mean(delta2_mfccs, axis=1))
+        features.extend(np.std(delta2_mfccs, axis=1))
+    
     # Energia (RMS)
     if cfg['features']['classical']['energy']:
         rms = librosa.feature.rms(y=audio)
@@ -43,14 +50,16 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
     
     # Pitch features
     if cfg['features']['classical']['pitch']:
-        pitch_cfg = cfg['features']['classical']['pitch']
+        pitch_method = cfg['features']['classical'].get('pitch_method', 'pyin')
+        pitch_fmin = cfg['features']['classical'].get('pitch_fmin', 50)
+        pitch_fmax = cfg['features']['classical'].get('pitch_fmax', 400)
         
-        if pitch_cfg['method'] == 'pyin':
+        if pitch_method == 'pyin':
             # Usa librosa per pitch
             f0, voiced_flag, voiced_probs = librosa.pyin(
                 audio, 
-                fmin=pitch_cfg['fmin'], 
-                fmax=pitch_cfg['fmax'], 
+                fmin=pitch_fmin, 
+                fmax=pitch_fmax, 
                 sr=sr
             )
             
@@ -62,10 +71,12 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
                     np.mean(f0_clean),
                     np.std(f0_clean),
                     np.min(f0_clean),
-                    np.max(f0_clean)
+                    np.max(f0_clean),
+                    np.median(f0_clean),
+                    len(f0_clean) / len(f0)  # Voicing ratio
                 ])
             else:
-                features.extend([0, 0, 0, 0])
+                features.extend([0, 0, 0, 0, 0, 0])
     
     # Jitter e Shimmer usando Parselmouth
     if cfg['features']['classical']['jitter_shimmer']:
@@ -89,4 +100,37 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
             # In caso di errore, aggiungi valori zero
             features.extend([0, 0])
     
-    return np.array(features, dtype=np.float32)
+    # Features spettrali aggiuntive
+    if cfg['features']['classical'].get('spectral_features', False):
+        # Spectral centroid
+        spectral_centroids = librosa.feature.spectral_centroid(y=audio, sr=sr)
+        features.extend([np.mean(spectral_centroids), np.std(spectral_centroids)])
+        
+        # Spectral rolloff
+        spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sr)
+        features.extend([np.mean(spectral_rolloff), np.std(spectral_rolloff)])
+        
+        # Spectral bandwidth
+        spectral_bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sr)
+        features.extend([np.mean(spectral_bandwidth), np.std(spectral_bandwidth)])
+        
+        # Spectral contrast
+        spectral_contrast = librosa.feature.spectral_contrast(y=audio, sr=sr)
+        features.extend(np.mean(spectral_contrast, axis=1))
+        
+        # Spectral flatness
+        spectral_flatness = librosa.feature.spectral_flatness(y=audio)
+        features.extend([np.mean(spectral_flatness), np.std(spectral_flatness)])
+    
+    # Zero crossing rate
+    if cfg['features']['classical'].get('zero_crossing_rate', False):
+        zcr = librosa.feature.zero_crossing_rate(audio)
+        features.extend([np.mean(zcr), np.std(zcr)])
+    
+    # Converti a array e gestisci valori NaN/Inf
+    features_array = np.array(features, dtype=np.float32)
+    
+    # Sostituisci NaN e Inf con 0
+    features_array = np.nan_to_num(features_array, nan=0.0, posinf=0.0, neginf=0.0)
+    
+    return features_array

@@ -4,23 +4,15 @@ import yaml
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report
 
 import torch
 import torch.utils.data
-from matplotlib import pyplot
-from matplotlib.axes import Axes
-from torch import Tensor
-from torch.nn import CrossEntropyLoss, Module
-from torch.optim.lr_scheduler import LambdaLR, LRScheduler
+from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
-from transformers import AutoModelForAudioClassification
-import seaborn as sns
-import matplotlib.pyplot as plt
 
-from config.config import OPTIMIZERS, Config
-from data_classes.dataset import AudioDataset, Sample
+from data_classes.dataset import AudioDataset
 from model_classes.cnn_model import CNNModel
 from model_classes.mlp import MLP
 from extract_representetion.classical_features import extract_features
@@ -52,6 +44,14 @@ def train_classical_svm(cfg, dataset):
     X = np.array(X)
     y = np.array(y)
     
+    print(f"📊 Features estratte: {X.shape[1]} features per {X.shape[0]} campioni")
+    
+    # NORMALIZZAZIONE CRITICA per SVM
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    print(f"✅ Features normalizzate con StandardScaler")
+    
     # Split train/validation/test con validation split dal config
     validation_split = cfg['training'].get('validation_split', 0.2)
     test_split = 0.2
@@ -71,16 +71,28 @@ def train_classical_svm(cfg, dataset):
     )
     
     print(f"📊 Training con validation loss monitoring")
+    print(f"📊 Distribuzione classi training: {np.bincount(y_train)}")
+    print(f"📊 Distribuzione classi test: {np.bincount(y_test)}")
     
-    # Training SVM
-    svm = SVC(
-        kernel=cfg['model']['svm']['kernel'],
-        C=cfg['model']['svm']['C'],
-        gamma=cfg['model']['svm']['gamma'],
-        random_state=cfg['training']['seed'],
-        probability=True  # Abilita predict_proba per calcolare loss
-    )
+    # Training SVM con parametri ottimizzati
+    svm_params = {
+        'kernel': cfg['model']['svm']['kernel'],
+        'C': cfg['model']['svm']['C'],
+        'random_state': cfg['training']['seed'],
+        'probability': True  # Abilita predict_proba per calcolare loss
+    }
     
+    # Aggiungi gamma solo per kernel non-lineari
+    if cfg['model']['svm']['kernel'] != 'linear':
+        svm_params['gamma'] = cfg['model']['svm']['gamma']
+    
+    # Aggiungi class_weight se specificato
+    if 'class_weight' in cfg['model']['svm']:
+        svm_params['class_weight'] = cfg['model']['svm']['class_weight']
+    
+    print(f"🔧 Parametri SVM: {svm_params}")
+    
+    svm = SVC(**svm_params)
     svm.fit(X_train, y_train)
     
     # Validation loss (usando log-loss per SVM con probabilità)
@@ -107,8 +119,10 @@ def train_classical_svm(cfg, dataset):
         model_config={
             'C': cfg['model']['svm']['C'],
             'kernel': cfg['model']['svm']['kernel'],
-            'gamma': cfg['model']['svm']['gamma'],
-            'validation_loss': val_loss
+            'gamma': cfg['model']['svm'].get('gamma', 'N/A'),
+            'class_weight': cfg['model']['svm'].get('class_weight', 'None'),
+            'validation_loss': val_loss,
+            'n_features': X.shape[1]
         },
         class_names=['healthy', 'parkinson']
     )
