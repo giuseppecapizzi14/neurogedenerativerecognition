@@ -17,8 +17,8 @@ model:
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [32, 16]                # Architettura MINIMA per combattere overfitting estremo
-    dropout: 0.6                           # OTTIMALE: bilanciato per target ~80% accuracy
+    hidden_layers: [128, 64, 32]           # POTENZIATA: architettura più profonda per features complesse
+    dropout: 0.4                           # RIDOTTO: più apprendimento per MLP classico
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
@@ -59,13 +59,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 8                               # OTTIMALE: come suggerito dall'utente per convergenza completa
+  epochs: 12                              # AUMENTATO: MLP classico ha bisogno di più epoche per convergere
   batch_size: 24                           # Ridotto per dataset piccolo (migliore gradiente)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
-  max_lr: 0.00007                         # BILANCIATO: aumentato per raggiungere ~80% accuracy
-  min_lr: 0.000001                        # Min LR proporzionale (1/100 del max)
-  warmup_ratio: 0.4                       # Warmup aumentato per convergenza più graduale
-  weight_decay: 0.12                      # BILANCIATO: ridotto per permettere apprendimento migliore
+  max_lr: 0.0003                          # AUMENTATO: MLP classico ha bisogno di learning rate più alto
+  min_lr: 0.000003                        # Min LR proporzionale (1/100 del max)
+  warmup_ratio: 0.3                       # Warmup ridotto per MLP più semplice
+  weight_decay: 0.05                      # RIDOTTO: MLP classico ha meno parametri, meno regolarizzazione
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
