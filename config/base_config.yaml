@@ -18,7 +18,7 @@ model:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
     hidden_layers: [32, 16]                # Architettura MINIMA per combattere overfitting estremo
-    dropout: 0.8                           # Dropout ESTREMO - disattiva 80% neuroni
+    dropout: 0.5                           # Dropout bilanciato - non troppo aggressivo
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
     C: 10.0                                # Aumentato per più flessibilità
