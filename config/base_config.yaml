@@ -18,7 +18,7 @@ model:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
     hidden_layers: [32, 16]                # Architettura MINIMA per combattere overfitting estremo
-    dropout: 0.7                           # ANTI-OVERFITTING: aumentato per modelli potenti (HuBERT, ALM)
+    dropout: 0.6                           # ANTI-OVERFITTING: aumentato per modelli potenti (HuBERT, ALM)
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
