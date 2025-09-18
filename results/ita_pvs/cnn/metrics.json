@@ -1,0 +1,47 @@
+{
+  "model_name": "CNN",
+  "dataset_name": "Ita-PVS",
+  "model_settings": {
+    "in_type": "waveform",
+    "dropout": 0.35,
+    "learning_rate": 0.0003,
+    "epochs": 10,
+    "batch_size": 24,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.810126582278481,
+    "precision": 0.8102647015810598,
+    "recall": 0.810126582278481,
+    "f1_score": 0.8100656961416455,
+    "sensitivity": 0.825,
+    "specificity": 0.7948717948717948
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.8157894736842105,
+      "recall": 0.7948717948717948,
+      "f1-score": 0.8051948051948052,
+      "support": 78.0
+    },
+    "parkinson": {
+      "precision": 0.8048780487804879,
+      "recall": 0.825,
+      "f1-score": 0.8148148148148148,
+      "support": 80.0
+    },
+    "accuracy": 0.810126582278481,
+    "macro avg": {
+      "precision": 0.8103337612323491,
+      "recall": 0.8099358974358974,
+      "f1-score": 0.8100048100048101,
+      "support": 158.0
+    },
+    "weighted avg": {
+      "precision": 0.8102647015810598,
+      "recall": 0.810126582278481,
+      "f1-score": 0.8100656961416455,
+      "support": 158.0
+    }
+  }
+}
