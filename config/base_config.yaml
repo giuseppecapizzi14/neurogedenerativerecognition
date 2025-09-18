@@ -18,7 +18,7 @@ model:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
     hidden_layers: [32, 16]                # Architettura MINIMA per combattere overfitting estremo
-    dropout: 0.4                           # Regolarizzazione ottimizzata per target 80-85% (ridotta da 0.5)
+    dropout: 0.6                           # Regolarizzazione ottimizzata per target 80-85% (ridotta da 0.5)
   svm:
     kernel: "linear"                       # Linear per dataset piccolo (meno overfitting)
     C: 10.0                                # Aumentato per più flessibilità
@@ -58,7 +58,7 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 10                               # Aumentate da 8 per permettere convergenza migliore verso target 80-85%
+  epochs: 8                               # Aumentate da 8 per permettere convergenza migliore verso target 80-85%
   batch_size: 24                           # Ridotto per dataset piccolo (migliore gradiente)
   optimizer: adamw                         # AdamW per migliore regolarizzazione
   max_lr: 0.0001                          # LR drasticamente ridotto per convergenza ultra-conservativa
