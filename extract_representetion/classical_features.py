@@ -127,6 +127,35 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
         zcr = librosa.feature.zero_crossing_rate(audio)
         features.extend([np.mean(zcr), np.std(zcr)])
     
+    # Tempo (se richiesto)
+    if cfg['features']['classical'].get('tempo', False):
+        try:
+            tempo, _ = librosa.beat.beat_track(y=audio, sr=sr)
+            features.append(tempo)
+        except Exception:
+            features.append(120.0)  # Valore di default
+    
+    # Chroma features (se richiesto)
+    if cfg['features']['classical'].get('chroma', False):
+        chroma = librosa.feature.chroma_stft(y=audio, sr=sr)
+        features.extend(np.mean(chroma, axis=1))
+        features.extend(np.std(chroma, axis=1))
+    
+    # Spectral centroid (se richiesto)
+    if cfg['features']['classical'].get('spectral_centroid', False):
+        spectral_centroids = librosa.feature.spectral_centroid(y=audio, sr=sr)
+        features.extend([np.mean(spectral_centroids), np.std(spectral_centroids)])
+    
+    # Spectral bandwidth (se richiesto)
+    if cfg['features']['classical'].get('spectral_bandwidth', False):
+        spectral_bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sr)
+        features.extend([np.mean(spectral_bandwidth), np.std(spectral_bandwidth)])
+    
+    # Spectral rolloff (se richiesto)
+    if cfg['features']['classical'].get('spectral_rolloff', False):
+        spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sr)
+        features.extend([np.mean(spectral_rolloff), np.std(spectral_rolloff)])
+    
     # Converti a array e gestisci valori NaN/Inf
     features_array = np.array(features, dtype=np.float32)
     

@@ -37,8 +37,10 @@ features:
     spectral_rolloff: true                 # Rolloff spettrale
     spectral_features: true                # ⬆️ Features spettrali aggiuntive per più informazioni
     zero_crossing_rate: true               # Tasso attraversamento zero
-    rms_energy: true                       # ⬆️ AGGIUNTO: energia RMS per intensità audio
+    energy: true                       # ⬆️ AGGIUNTO: energia RMS per intensità audio
     tempo: true                            # ⬆️ AGGIUNTO: tempo per ritmo audio
+    pitch: false                           # ⬇️ DISABILITATO: può causare errori su alcuni audio
+    jitter_shimmer: false                  # ⬇️ DISABILITATO: richiede Parselmouth stabile
   spectrogram:
     n_mels: 16                             # ⬇️ Ridotto da 32 per dataset piccolo (meno complessità)
     n_fft: 128                             # ⬇️ Ridotto da 256 per evitare overfitting
