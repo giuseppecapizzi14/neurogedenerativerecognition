@@ -165,7 +165,6 @@ def extract_features(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> np.ndarr
     # Debug: verifica che tutte le features siano scalari
     for i, feat in enumerate(features):
         if hasattr(feat, '__len__') and not isinstance(feat, (str, bytes)):
-            print(f"Warning: Feature {i} is not scalar: {type(feat)}, shape: {getattr(feat, 'shape', 'no shape')}")
             # Converti array/liste annidate in scalari
             if hasattr(feat, 'item'):
                 features[i] = feat.item()
