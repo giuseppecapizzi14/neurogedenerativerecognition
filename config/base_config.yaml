@@ -63,13 +63,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 30                             # Aumentato drasticamente: architettura profonda richiede piu tempo
-  batch_size: 16                         # Aumentato per stabilita con 4 layers
-  lr: 0.003                              # Aumentato: learning rate aggressivo per superare underfitting
-  max_lr: 0.01                           # Aumentato proporzionalmente per cicli LR
-  min_lr: 0.0001                         # Min LR piu alto per evitare stagnazione
-  warmup_ratio: 0.2                      # Warmup ridotto per convergenza immediata
-  weight_decay: 0.005                    # Ridotto ulteriormente: meno regolarizzazione
+  epochs: 25                              # Aumentato per dataset piccolo: serve più training
+  batch_size: 48                          # Batch size ottimale per Transformers+MLP
+  lr: 0.0008                              # Learning rate ottimale dai migliori risultati
+  max_lr: 0.002                           # Scheduler ciclico per convergenza migliore
+  min_lr: 0.00005                         # LR minimo per fine-tuning
+  warmup_ratio: 0.1                       # Warmup ridotto per dataset piccolo
+  weight_decay: 0.01                      # Regolarizzazione per evitare overfitting
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
