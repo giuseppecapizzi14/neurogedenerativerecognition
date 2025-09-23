@@ -28,9 +28,9 @@ model:
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [256, 128, 64]         # Architettura più robusta per compensare dropout
-    dropout: 0.2                          # Dropout bilanciato: previene overfitting senza underfitting
-    class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
+    hidden_layers: [128, 64]               # Ridotto da [256, 128, 64]: architettura più semplice e veloce
+    dropout: 0.15                          # Ridotto da 0.2: meno dropout per training più veloce
+    class_weight: "balanced"               # Mantiene bilanciamento classi
   svm:
     kernel: "rbf"                          # RBF per pattern non-lineari complessi
     C: 0.2                                 # REGOLARIZZAZIONE FORTE: previene overfitting mantenendo espressività
@@ -40,19 +40,19 @@ model:
 
 features:
   classical:
-    n_mfcc: 20                             # Aumentato: piu coefficienti per dettagli audio
+    n_mfcc: 13                             # Ridotto da 20: meno coefficienti per velocità
     mfcc_delta: true                       # Delta features per dinamica temporale
-    mfcc_delta2: true                      # Delta-delta per accelerazione
+    mfcc_delta2: false                     # Disabilitato: riduce complessità
     chroma: true                           # Features armoniche
     spectral_centroid: true                # Centro spettrale
-    spectral_bandwidth: true               # Larghezza banda spettrale
+    spectral_bandwidth: false              # Disabilitato: riduce features
     spectral_rolloff: true                 # Rolloff spettrale
     zero_crossing_rate: true               # Tasso attraversamento zero
-    rms_energy: true                       # Aggiunto: energia RMS per intensita audio
-    tempo: true                            # Aggiunto: tempo per ritmo audio
-    tonnetz: true                          # Nuove: features armoniche complesse
-    poly_features: true                    # Nuove: caratteristiche ritmiche
-    spectral_contrast_enhanced: true       # Nuove: contrasto spettrale migliorato
+    rms_energy: true                       # Energia RMS per intensita audio
+    tempo: false                           # Disabilitato: calcolo lento
+    tonnetz: false                         # Disabilitato: features complesse lente
+    poly_features: false                   # Disabilitato: caratteristiche ritmiche lente
+    spectral_contrast_enhanced: false      # Disabilitato: contrasto spettrale complesso
     pitch: false                           # Disabilitato: puo causare errori su alcuni audio
     jitter_shimmer: false                  # Disabilitato: richiede Parselmouth stabile
   spectrogram:
@@ -75,13 +75,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 15                              # Aumentato per SVM: più iterazioni per convergenza
-  batch_size: 32                          # Aumentato per SVM: può gestire batch più grandi
-  lr: 0.001                               # LR standard per SVM
-  max_lr: 0.002                           # Scheduler meno aggressivo
-  min_lr: 0.00005                         # LR minimo più alto
-  warmup_ratio: 0.1                       # Warmup ridotto per SVM
-  weight_decay: 0.01                      # Regolarizzazione leggera per SVM
+  epochs: 8                               # Ridotto da 15: meno epoche per training più veloce
+  batch_size: 64                          # Aumentato da 32: batch più grandi per efficienza
+  lr: 0.003                               # Aumentato da 0.001: learning rate più alto per convergenza veloce
+  max_lr: 0.005                           # Aumentato da 0.002: scheduler più aggressivo
+  min_lr: 0.0001                          # Aumentato da 0.00005: LR minimo più alto
+  warmup_ratio: 0.05                      # Ridotto da 0.1: warmup più breve
+  weight_decay: 0.005                     # Ridotto da 0.01: meno regolarizzazione per velocità
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
@@ -89,6 +89,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.2                     # Ridotto per massimizzare training data
+  validation_split: 0.15                  # Ridotto da 0.2: più dati per training, meno per validation
 
 plot: [accuracy, loss]
