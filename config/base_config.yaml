@@ -86,7 +86,7 @@ training:
   weight_decay: 0.05                       # Regolarizzazione molto forte per dataset piccolo
   checkpoint_dir: checkpoints/
   model_name: best_model
-  device: "auto"                           # auto | cpu | cuda
+  device: "cuda"                           # cpu | cuda | mps
   evaluation_metric: accuracy
   best_metric_lower_is_better: false
   seed: 42  
