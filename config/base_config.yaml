@@ -26,9 +26,9 @@ model:
   dropout: 0.6                             # Dropout globale per CNN (necessario per compatibilità)
   branch: "cnn"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
-    in_type: "waveform"                   # Usa spettrogrammi per velocità
+    in_type: "spectrogram"                   # Usa spettrogrammi per velocità
     dropout: 0.6                             # Dropout molto alto per dataset piccolo
-    batch_norm: true                         # Batch normalization per stabilità
+    batch_norm: false                        # Disabilitato: problemi con batch piccoli
     n_mels: 32                               # Ridotto per velocità su dataset piccolo
     n_fft: 256                               # Ridotto per velocità
     hop_length: 128                          # Ridotto per velocità
