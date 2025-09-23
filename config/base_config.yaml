@@ -23,10 +23,16 @@ data:
     report_speaker_metrics: true # Riporta metriche aggregate per speaker
 
 model:
-  dropout: 0.3                            # Bilanciato per evitare underfitting severo
-  branch: "classical_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "cnn"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
-    in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
+    in_type: "waveform"                   # Usa spettrogrammi per velocità
+    dropout: 0.6                             # Dropout molto alto per dataset piccolo
+    batch_norm: true                         # Batch normalization per stabilità
+    n_mels: 32                               # Ridotto per velocità su dataset piccolo
+    n_fft: 256                               # Ridotto per velocità
+    hop_length: 128                          # Ridotto per velocità
+    log: true
+    max_length: 16000                        # Ridotto per velocità (2 secondi a 8kHz)
   mlp:
     hidden_layers: [256, 128, 64]               # Ridotto da [256, 128, 64]: architettura più semplice e veloce
     dropout: 0.3                          # Ridotto da 0.2: meno dropout per training più veloce
@@ -55,9 +61,6 @@ features:
     spectral_contrast_enhanced: false      # Disabilitato: contrasto spettrale complesso
     pitch: false                           # Disabilitato: puo causare errori su alcuni audio
     jitter_shimmer: false                  # Disabilitato: richiede Parselmouth stabil  spectrogram:
-    n_mels: 64                             # Aumentato per CNN (più features spettrali)
-    n_fft: 512                             # Aumentato per migliore risoluzione frequenziale
-    hop_length: 256                        # Proporzionale a n_fft per efficienza
     log: true
   transformers:
     model_name: "ALM/hubert-base-audioset"        
@@ -74,20 +77,20 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 25                               # Ridotto da 40 per CNN (converge più velocemente)
-  batch_size: 32                           # Ridotto per CNN (più memoria intensiva)
-  lr: 0.001                                # Ridotto per CNN (più sensibile)
-  max_lr: 0.003                            # Ridotto per stabilità CNN
-  min_lr: 0.00005                          # LR minimo più basso per CNN
-  warmup_ratio: 0.1                        # Warmup più lungo per CNN
-  weight_decay: 0.01                       # Aumentato drasticamente per ridurre overfitting
+  epochs: 10                               # Drasticamente ridotto per dataset piccolo (~2268 campioni)
+  batch_size: 16                           # Ridotto ulteriormente per dataset piccolo
+  lr: 0.0005                               # Molto più basso per evitare overfitting rapido
+  max_lr: 0.002                            # Ridotto per stabilità su dataset piccolo
+  min_lr: 0.00001                          # LR minimo molto basso
+  warmup_ratio: 0.2                        # Warmup più lungo per dataset piccolo
+  weight_decay: 0.05                       # Regolarizzazione molto forte per dataset piccolo
   checkpoint_dir: checkpoints/
   model_name: best_model
-  device: "cuda"                           # auto | cpu | cuda
+  device: "auto"                           # auto | cpu | cuda
   evaluation_metric: accuracy
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  val_split: 0.25                          # Aumentato per migliore validazione CNN
+  val_split: 0.3                           # Aumentato per dataset piccolo (migliore validazione)
 
 plot: [accuracy, loss]
