@@ -26,10 +26,10 @@ def train_classical_svm(cfg, dataset):
     
     # Estrai features per tutti i campioni con parallelizzazione
     print("🚀 Estraendo features con ottimizzazioni...")
-    X, y = [], []
+    X, y, speakers = [], [], []
     
     # Usa DataLoader per batch processing delle features
-    feature_loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
+    feature_loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=0)
     
     for batch in tqdm(feature_loader, desc="Extracting features (batched)"):
         batch_features = []
@@ -40,11 +40,18 @@ def train_classical_svm(cfg, dataset):
         
         X.extend(batch_features)
         y.extend(batch['label'].tolist())
+        # Estrai speaker ID se disponibile
+        if hasattr(dataset, 'speakers') and len(dataset.speakers) > 0:
+            speakers.extend([dataset.speakers[idx] for idx in range(len(batch['waveform']))])
+        else:
+            speakers.extend([f"speaker_{i}" for i in range(len(batch['waveform']))])
     
     X = np.array(X)
     y = np.array(y)
+    speakers = np.array(speakers)
     
     print(f"📊 Features estratte: {X.shape[1]} features per {X.shape[0]} campioni")
+    print(f"📊 Speaker unici: {len(np.unique(speakers))}")
     
     # NORMALIZZAZIONE CRITICA per SVM
     from sklearn.preprocessing import StandardScaler
@@ -52,23 +59,30 @@ def train_classical_svm(cfg, dataset):
     X = scaler.fit_transform(X)
     print(f"✅ Features normalizzate con StandardScaler")
     
-    # Split train/validation/test con validation split dal config
+    # SPLIT A LIVELLO DI SPEAKER per evitare data leakage
+    from sklearn.model_selection import GroupShuffleSplit
+    
     validation_split = cfg['training'].get('validation_split', 0.2)
     test_split = 0.2
     train_split = 1.0 - validation_split - test_split
     
-    print(f"📊 Dataset split: Train {train_split:.1%}, Val {validation_split:.1%}, Test {test_split:.1%}")
+    print(f"📊 Dataset split (speaker-level): Train {train_split:.1%}, Val {validation_split:.1%}, Test {test_split:.1%}")
     
-    # Prima divisione: train+val vs test
-    X_temp, X_test, y_temp, y_test = train_test_split(
-        X, y, test_size=test_split, random_state=cfg['training']['seed'], stratify=y
-    )
+    # Prima divisione: train+val vs test (a livello di speaker)
+    gss_test = GroupShuffleSplit(n_splits=1, test_size=test_split, random_state=cfg['training']['seed'])
+    temp_idx, test_idx = next(gss_test.split(X, y, groups=speakers))
     
-    # Seconda divisione: train vs validation
-    val_size_adjusted = validation_split / (1 - test_split)  # Aggiusta per il subset rimanente
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_temp, y_temp, test_size=val_size_adjusted, random_state=cfg['training']['seed'], stratify=y_temp
-    )
+    X_temp, X_test = X[temp_idx], X[test_idx]
+    y_temp, y_test = y[temp_idx], y[test_idx]
+    speakers_temp = speakers[temp_idx]
+    
+    # Seconda divisione: train vs validation (a livello di speaker)
+    val_size_adjusted = validation_split / (1 - test_split)
+    gss_val = GroupShuffleSplit(n_splits=1, test_size=val_size_adjusted, random_state=cfg['training']['seed'])
+    train_idx, val_idx = next(gss_val.split(X_temp, y_temp, groups=speakers_temp))
+    
+    X_train, X_val = X_temp[train_idx], X_temp[val_idx]
+    y_train, y_val = y_temp[train_idx], y_temp[val_idx]
     
     print(f"📊 Training con validation loss monitoring")
     print(f"📊 Distribuzione classi training: {np.bincount(y_train)}")
@@ -105,8 +119,8 @@ def train_classical_svm(cfg, dataset):
     # Evaluation
     y_pred = svm.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
-    
-    print(f"SVM Test Accuracy: {accuracy:.4f}")
+
+    print(f"🎯 SVM Test Accuracy: {accuracy:.4f}")
     print("\nSVM Classification Report:")
     print(classification_report(y_test, y_pred))
     
@@ -149,7 +163,7 @@ def train_classical_mlp(cfg, dataset):
     X, y = [], []
     
     # Usa DataLoader per batch processing delle features
-    feature_loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
+    feature_loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=0)
     
     for batch in tqdm(feature_loader, desc="Extracting features (batched)"):
         batch_features = []
@@ -194,9 +208,9 @@ def train_classical_mlp(cfg, dataset):
     val_dataset = TensorDataset(X_val, y_val)
     test_dataset = TensorDataset(X_test, y_test)
     
-    train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True, num_workers=2, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=2, pin_memory=True)
-    test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=2, pin_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=cfg['training']['batch_size'], shuffle=True, num_workers=0, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=0, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=cfg['training']['batch_size'], shuffle=False, num_workers=0, pin_memory=True)
     
     # Crea modello
     num_classes = len(set(y))

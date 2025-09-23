@@ -1,15 +1,26 @@
 data:
-  train_ratio: 0.85
-  test_val_ratio: 0.35
-  data_dir: /root/dataset/dataset
-  dataset_name: "Addresso"     # "Ita-PVS" | "Neurovoz" | "Addresso"
-  target_sr: 16000
-  mono: true
-  normalize: "peak"           # "peak" | "rms"
-  fixed_duration_s: 5.0
-  resample: true
-  pad_mode: "silence"         # zeri
-  label_map: { healthy: 0, alzheimer: 1 }
+  train_ratio: 0.85                       # Ottimizzato per dataset piccolo: più dati per training
+  test_ratio: 0.15                        # Meno dati per test, più per training
+  data_dir: "dataset"
+  dataset_name: "Addresso"                # Cambiato per testare Addresso
+  target_sample_rate: 16000
+  target_sr: 16000                        # Alias per compatibilità
+  fixed_duration: 5.0                     # Durata fissa per segmenti audio
+  fixed_duration_s: 5.0                   # Alias per compatibilità
+  mono: true                              # Converte audio in mono
+  resample: true                          # Abilita resampling
+  normalize: "peak"                       # Normalizzazione peak
+  label_map:
+    0: "cn"                               # Controllo normale
+    1: "ad"                               # Alzheimer
+  
+  # Parametri specifici per Addresso (opzionali per altri dataset)
+  addresso:
+    use_segmentation: true      # Usa segmentazione CSV per Addresso
+    target_speaker: "PAR"       # Filtra solo segmenti del partecipante
+    min_segment_length_ms: 500  # Filtra segmenti troppo corti
+    speaker_level_split: true   # Usa split a livello di speaker per evitare data leakage
+    report_speaker_metrics: true # Riporta metriche aggregate per speaker
 
 model:
   dropout: 0.3                            # Bilanciato per evitare underfitting severo
@@ -21,10 +32,11 @@ model:
     dropout: 0.2                          # Dropout bilanciato: previene overfitting senza underfitting
     class_weight: "balanced"               # CRITICO: bilancia classi per migliorare recall classe 0
   svm:
-    kernel: "rbf"                          # Cambiato: RBF per pattern non-lineari piu complessi
-    C: 50.0                                # Aumentato: piu flessibilita per 80% accuracy target
-    gamma: "scale"                         # Cambiato: scale per migliore gestione features
+    kernel: "rbf"                          # RBF per pattern non-lineari complessi
+    C: 0.2                                 # REGOLARIZZAZIONE FORTE: previene overfitting mantenendo espressività
+    gamma: 0.002                           # GAMMA BASSO: decisioni più generalizzabili
     class_weight: "balanced"               # Bilanciamento automatico classi
+    probability: true                      # Abilita probabilità per metriche dettagliate
 
 features:
   classical:
@@ -63,13 +75,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 10                              # Aumentato: serve più training per convergenza con architettura complessa
-  batch_size: 16                          # Ridotto per dataset molto piccolo (22 test samples)
-  lr: 0.0005                              # LR leggermente più alto per convergenza migliore
-  max_lr: 0.001                           # Scheduler meno conservativo
-  min_lr: 0.00001                         # LR minimo standard
-  warmup_ratio: 0.15                      # Warmup standard
-  weight_decay: 0.03                      # Regolarizzazione moderata
+  epochs: 15                              # Aumentato per SVM: più iterazioni per convergenza
+  batch_size: 32                          # Aumentato per SVM: può gestire batch più grandi
+  lr: 0.001                               # LR standard per SVM
+  max_lr: 0.002                           # Scheduler meno aggressivo
+  min_lr: 0.00005                         # LR minimo più alto
+  warmup_ratio: 0.1                       # Warmup ridotto per SVM
+  weight_decay: 0.01                      # Regolarizzazione leggera per SVM
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"              # "cuda" | "mps" | "cpu"
@@ -77,6 +89,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.15                     # Ridotto da 0.20 per massimizzare training data
+  validation_split: 0.2                     # Ridotto per massimizzare training data
 
 plot: [accuracy, loss]

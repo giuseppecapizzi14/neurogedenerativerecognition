@@ -1,0 +1,47 @@
+{
+  "model_name": "SVM",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "C": 0.2,
+    "kernel": "rbf",
+    "gamma": 0.002,
+    "class_weight": "balanced",
+    "validation_loss": 0.18072067535218111,
+    "n_features": 183
+  },
+  "metrics": {
+    "accuracy": 0.8852813852813853,
+    "precision": 0.8963896995393058,
+    "recall": 0.8852813852813853,
+    "f1_score": 0.885102341591986,
+    "sensitivity": 0.8163265306122449,
+    "specificity": 0.9631336405529954
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.8228346456692913,
+      "recall": 0.9631336405529954,
+      "f1-score": 0.8874734607218684,
+      "support": 217.0
+    },
+    "parkinson": {
+      "precision": 0.9615384615384616,
+      "recall": 0.8163265306122449,
+      "f1-score": 0.8830022075055187,
+      "support": 245.0
+    },
+    "accuracy": 0.8852813852813853,
+    "macro avg": {
+      "precision": 0.8921865536038764,
+      "recall": 0.8897300855826202,
+      "f1-score": 0.8852378341136935,
+      "support": 462.0
+    },
+    "weighted avg": {
+      "precision": 0.8963896995393058,
+      "recall": 0.8852813852813853,
+      "f1-score": 0.885102341591986,
+      "support": 462.0
+    }
+  }
+}
