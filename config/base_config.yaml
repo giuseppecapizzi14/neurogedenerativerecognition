@@ -28,8 +28,8 @@ model:
   cnn:
     in_type: "waveform"                      # "waveform" | "spectrogram" - waveform per semplicità
   mlp:
-    hidden_layers: [128, 64]               # Ridotto da [256, 128, 64]: architettura più semplice e veloce
-    dropout: 0.15                          # Ridotto da 0.2: meno dropout per training più veloce
+    hidden_layers: [256, 128, 64]               # Ridotto da [256, 128, 64]: architettura più semplice e veloce
+    dropout: 0.3                          # Ridotto da 0.2: meno dropout per training più veloce
     class_weight: "balanced"               # Mantiene bilanciamento classi
   svm:
     kernel: "rbf"                          # RBF per pattern non-lineari complessi
@@ -40,15 +40,15 @@ model:
 
 features:
   classical:
-    n_mfcc: 13                             # Ridotto da 20: meno coefficienti per velocità
-    mfcc_delta: true                       # Delta features per dinamica temporale
+    n_mfcc: 13                             # Mantiene 13 coefficienti MFCC (essenziali)
+    mfcc_delta: true                       # Delta features (importanti per dinamica)
     mfcc_delta2: false                     # Disabilitato: riduce complessità
-    chroma: true                           # Features armoniche
-    spectral_centroid: true                # Centro spettrale
+    chroma: false                          # Disabilitato: non critico per Alzheimer
+    spectral_centroid: true                # Centro spettrale (importante)
     spectral_bandwidth: false              # Disabilitato: riduce features
-    spectral_rolloff: true                 # Rolloff spettrale
-    zero_crossing_rate: true               # Tasso attraversamento zero
-    rms_energy: true                       # Energia RMS per intensita audio
+    spectral_rolloff: false                # Disabilitato: non essenziale
+    zero_crossing_rate: true               # Tasso attraversamento zero (veloce e utile)
+    rms_energy: true                       # Energia RMS (essenziale)
     tempo: false                           # Disabilitato: calcolo lento
     tonnetz: false                         # Disabilitato: features complesse lente
     poly_features: false                   # Disabilitato: caratteristiche ritmiche lente
@@ -75,20 +75,20 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 8                               # Ridotto da 15: meno epoche per training più veloce
-  batch_size: 64                          # Aumentato da 32: batch più grandi per efficienza
-  lr: 0.003                               # Aumentato da 0.001: learning rate più alto per convergenza veloce
+  epochs: 15                               # Aumentato per migliore convergenza
+  batch_size: 48                           # Bilanciato per memoria e velocità
+  lr: 0.0015                               # Ridotto per apprendimento più stabile
   max_lr: 0.005                           # Aumentato da 0.002: scheduler più aggressivo
   min_lr: 0.0001                          # Aumentato da 0.00005: LR minimo più alto
   warmup_ratio: 0.05                      # Ridotto da 0.1: warmup più breve
-  weight_decay: 0.005                     # Ridotto da 0.01: meno regolarizzazione per velocità
+  weight_decay: 0.0005                     # Aumentato per ridurre overfitting
   checkpoint_dir: checkpoints/
   model_name: best_model
-  device: "cuda"              # "cuda" | "mps" | "cpu"
+  device: "cuda"                           # auto | cpu | cuda
   evaluation_metric: accuracy
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split
-  validation_split: 0.15                  # Ridotto da 0.2: più dati per training, meno per validation
+  validation_split: 0.2                   # Aumentato per migliore validazione
 
 plot: [accuracy, loss]
