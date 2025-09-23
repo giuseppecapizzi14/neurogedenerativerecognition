@@ -1,0 +1,50 @@
+{
+  "model_name": "MLP",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "hidden_layers": [
+      256,
+      128,
+      64
+    ],
+    "dropout": 0.2,
+    "learning_rate": 0.002,
+    "epochs": 15,
+    "batch_size": 32
+  },
+  "metrics": {
+    "accuracy": 0.6131868131868132,
+    "precision": 0.7439666838218083,
+    "recall": 0.6131868131868132,
+    "f1_score": 0.5637329552168262,
+    "sensitivity": 0.28270042194092826,
+    "specificity": 0.9724770642201835
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.5549738219895288,
+      "recall": 0.9724770642201835,
+      "f1-score": 0.7066666666666667,
+      "support": 218.0
+    },
+    "parkinson": {
+      "precision": 0.9178082191780822,
+      "recall": 0.28270042194092826,
+      "f1-score": 0.432258064516129,
+      "support": 237.0
+    },
+    "accuracy": 0.6131868131868132,
+    "macro avg": {
+      "precision": 0.7363910205838056,
+      "recall": 0.6275887430805559,
+      "f1-score": 0.5694623655913978,
+      "support": 455.0
+    },
+    "weighted avg": {
+      "precision": 0.7439666838218083,
+      "recall": 0.6131868131868132,
+      "f1-score": 0.5637329552168262,
+      "support": 455.0
+    }
+  }
+}
