@@ -23,6 +23,7 @@ data:
     report_speaker_metrics: true # Riporta metriche aggregate per speaker
 
 model:
+  dropout: 0.6                             # Dropout globale per CNN (necessario per compatibilità)
   branch: "cnn"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                   # Usa spettrogrammi per velocità
