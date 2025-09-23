@@ -83,6 +83,8 @@ def train_classical_svm(cfg, dataset):
     
     X_train, X_val = X_temp[train_idx], X_temp[val_idx]
     y_train, y_val = y_temp[train_idx], y_temp[val_idx]
+    speakers_train, speakers_val = speakers_temp[train_idx], speakers_temp[val_idx]
+    speakers_test = speakers[test_idx]
     
     print(f"📊 Training con validation loss monitoring")
     print(f"📊 Distribuzione classi training: {np.bincount(y_train)}")
@@ -119,8 +121,8 @@ def train_classical_svm(cfg, dataset):
     # Evaluation
     y_pred = svm.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
-
-    print(f"🎯 SVM Test Accuracy: {accuracy:.4f}")
+    
+    print(f"SVM Test Accuracy: {accuracy:.4f}")
     print("\nSVM Classification Report:")
     print(classification_report(y_test, y_pred))
     
