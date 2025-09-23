@@ -16,22 +16,38 @@ class Sample(TypedDict):
     label: int
 
 def apply_preprocessing(waveform: Tensor, sr: int, cfg: Dict[str, Any]) -> Tensor:
-    """Preprocessing unificato: mono -> resample -> normalize -> crop/pad"""
+    """
+    Applica preprocessing unificato per tutti i modelli.
+    Gestisce anche waveform vuoti o corrotti.
+    """
+    # Validazione input: controlla se il waveform è vuoto
+    if waveform.numel() == 0:
+        print("Warning: Empty waveform passed to preprocessing. Creating fallback.")
+        target_length = int(cfg['data']['fixed_duration_s'] * cfg['data']['target_sr'])
+        waveform = torch.zeros(1, target_length)
+        return waveform
+    
     # Mono conversion
     if cfg['data']['mono'] and waveform.shape[0] > 1:
         waveform = torch.mean(waveform, dim=0, keepdim=True)
     
-    # Resample
+    # Resample - con validazione aggiuntiva
     if cfg['data']['resample'] and sr != cfg['data']['target_sr']:
-        resampler = Resample(orig_freq=sr, new_freq=cfg['data']['target_sr'])
-        waveform = resampler(waveform)
+        try:
+            resampler = Resample(orig_freq=sr, new_freq=cfg['data']['target_sr'])
+            waveform = resampler(waveform)
+        except Exception as e:
+            print(f"Warning: Resampling failed: {e}. Using original waveform.")
     
     # Normalize
     if cfg['data']['normalize'] == 'peak':
-        waveform = waveform / (torch.max(torch.abs(waveform)) + 1e-8)
+        max_val = torch.max(torch.abs(waveform))
+        if max_val > 1e-8:  # Evita divisione per zero
+            waveform = waveform / max_val
     elif cfg['data']['normalize'] == 'rms':
         rms = torch.sqrt(torch.mean(waveform**2))
-        waveform = waveform / (rms + 1e-8)
+        if rms > 1e-8:  # Evita divisione per zero
+            waveform = waveform / rms
     
     # Fixed duration (crop/pad)
     target_length = int(cfg['data']['fixed_duration_s'] * cfg['data']['target_sr'])
@@ -282,18 +298,40 @@ class AudioDataset(Dataset[Sample]):
         # Normalizza il path per compatibilità cross-platform (sicurezza aggiuntiva)
         audio_path = os.path.normpath(audio_path.replace('\\', '/'))
         
-        # Carica audio
-        waveform, sample_rate = torchaudio.load(audio_path)
-        
-        # Se il dataset ha segmentazione, estrai il segmento specifico
-        if self.dataset_config.get('has_segmentation', False) and hasattr(self, 'segments') and idx < len(self.segments):
-            start_ms, end_ms = self.segments[idx]
-            start_sample = int(start_ms * sample_rate / 1000)
-            end_sample = int(end_ms * sample_rate / 1000)
-            waveform = waveform[:, start_sample:end_sample]
-        
-        # Preprocessing unificato per tutti i modelli
-        waveform = apply_preprocessing(waveform, sample_rate, self.cfg)
+        try:
+            # Carica audio
+            waveform, sample_rate = torchaudio.load(audio_path)
+            
+            # Validazione: controlla se il waveform è vuoto
+            if waveform.numel() == 0:
+                print(f"Warning: Empty waveform for file {audio_path}. Skipping...")
+                # Ritorna un campione con waveform vuoto che verrà gestito dal preprocessing
+                waveform = torch.zeros(1, int(self.cfg['data']['fixed_duration_s'] * self.cfg['data']['target_sr']))
+            
+            # Se il dataset ha segmentazione, estrai il segmento specifico
+            if self.dataset_config.get('has_segmentation', False) and hasattr(self, 'segments') and idx < len(self.segments):
+                start_ms, end_ms = self.segments[idx]
+                start_sample = int(start_ms * sample_rate / 1000)
+                end_sample = int(end_ms * sample_rate / 1000)
+                
+                # Validazione segmentazione
+                if start_sample >= end_sample or start_sample >= waveform.shape[1]:
+                    print(f"Warning: Invalid segment [{start_ms}ms-{end_ms}ms] for file {audio_path}. Using full audio.")
+                else:
+                    waveform = waveform[:, start_sample:end_sample]
+                    # Controlla se il segmento risultante è vuoto
+                    if waveform.numel() == 0:
+                        print(f"Warning: Empty segment for file {audio_path}. Using minimal audio.")
+                        waveform = torch.zeros(1, int(0.1 * sample_rate))  # 100ms di silenzio
+            
+            # Preprocessing unificato per tutti i modelli
+            waveform = apply_preprocessing(waveform, sample_rate, self.cfg)
+            
+        except Exception as e:
+            print(f"Error loading audio file {audio_path}: {e}")
+            # Crea un waveform di fallback (silenzio)
+            target_length = int(self.cfg['data']['fixed_duration_s'] * self.cfg['data']['target_sr'])
+            waveform = torch.zeros(1, target_length)
         
         # Prepara output base
         sample = {
