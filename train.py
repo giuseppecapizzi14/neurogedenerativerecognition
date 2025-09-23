@@ -623,28 +623,36 @@ if __name__ == "__main__":
         train_dataset, val_dataset = torch.utils.data.random_split(temp_dataset, [train_size, val_size])
         
         # Dataloader
-        # DataLoader ottimizzati per massima velocità
+        # DataLoader ultra-ottimizzati per velocità massima
         train_loader = DataLoader(
             train_dataset, 
             batch_size=cfg['training']['batch_size'], 
             shuffle=True,
-            num_workers=4,  # Parallelizzazione caricamento dati
+            num_workers=8,  # Massima parallelizzazione per Windows
             pin_memory=True,  # Trasferimento GPU più veloce
-            persistent_workers=True  # Riutilizzo workers
+            persistent_workers=True,  # Riutilizzo workers per velocità
+            prefetch_factor=4,  # Prefetch più batch per ridurre attese I/O
+            drop_last=True  # Evita batch parziali che rallentano
         )
         val_loader = DataLoader(
             val_dataset, 
             batch_size=cfg['training']['batch_size'], 
             shuffle=False,
-            num_workers=2,
-            pin_memory=True
+            num_workers=4,  # Parallelizzazione ridotta per validazione
+            pin_memory=True,
+            persistent_workers=True,
+            prefetch_factor=2,
+            drop_last=False  # Mantieni tutti i dati per validazione accurata
         )
         test_loader = DataLoader(
             test_dataset, 
             batch_size=cfg['training']['batch_size'], 
             shuffle=False,
-            num_workers=2,
-            pin_memory=True
+            num_workers=4,
+            pin_memory=True,
+            persistent_workers=True,
+            prefetch_factor=2,
+            drop_last=False
         )
         
         # Determina input size per CNN
