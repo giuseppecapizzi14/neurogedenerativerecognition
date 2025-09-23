@@ -23,11 +23,11 @@ data:
     report_speaker_metrics: true # Riporta metriche aggregate per speaker
 
 model:
-  dropout: 0.5                             # Dropout globale ottimizzato per target 80-85%
+  dropout: 0.7                             # REGOLARIZZAZIONE ESTREMA: anti-overfitting massimo
   branch: "cnn"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                   # Usa waveform come richiesto
-    dropout: 0.5                          # Ridotto per target 80-85% accuracy
+    dropout: 0.7                          # REGOLARIZZAZIONE ESTREMA: previene overfitting severo
     batch_norm: true                      # Riabilitato per stabilità training
   mlp:
     hidden_layers: [256, 128, 64]               # Ridotto da [256, 128, 64]: architettura più semplice e veloce
@@ -73,20 +73,20 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 8                                # Ridotto drasticamente: overfitting già a epoca 10
-  batch_size: 128                           # Raddoppiato per velocità training per epoca
-  lr: 0.002                                # Aumentato per convergenza più rapida
-  max_lr: 0.005                            # LR più alto per early stopping naturale
-  min_lr: 0.0002                           # LR minimo più alto
-  warmup_ratio: 0.05                       # Warmup minimo per velocità massima
-  weight_decay: 0.02                       # Aumentato per prevenire overfitting precoce
+  epochs: 6                                # Ottimizzato per dataset Addresso: bilanciamento velocità/accuratezza
+  batch_size: 64                           # Ridotto per dataset piccolo: migliore generalizzazione
+  lr: 0.003                                # LR moderato per dataset piccolo: convergenza stabile
+  max_lr: 0.006                            # LR massimo ridotto per evitare instabilità
+  min_lr: 0.0005                           # LR minimo per fine-tuning finale
+  warmup_ratio: 0.05                       # Warmup leggero per dataset piccolo
+  weight_decay: 0.08                       # Regolarizzazione forte ma non estrema per dataset piccolo
   checkpoint_dir: checkpoints/
   model_name: best_model
-  device: "cuda"                           # Auto-detection per compatibilità
+  device: "cuda"                           # CUDA esplicito per massima velocità
   evaluation_metric: accuracy
   best_metric_lower_is_better: false
   seed: 42  
-  # Validation Split
-  val_split: 0.15                          # Ridotto per più dati training, meno validazione
+  # Validation Split ottimizzato per dataset piccolo
+  val_split: 0.15                          # Aumentato per validazione più robusta su dataset piccolo
 
 plot: [accuracy, loss]
