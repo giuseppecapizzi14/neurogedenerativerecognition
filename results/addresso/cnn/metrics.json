@@ -1,0 +1,47 @@
+{
+  "model_name": "CNN",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "in_type": "waveform",
+    "dropout": 0.67,
+    "learning_rate": 0.00111,
+    "epochs": 9,
+    "batch_size": 25,
+    "device": "mps"
+  },
+  "metrics": {
+    "accuracy": 0.8678414096916299,
+    "precision": 0.8720629515050113,
+    "recall": 0.8678414096916299,
+    "f1_score": 0.8665154301659115,
+    "sensitivity": 0.9357429718875502,
+    "specificity": 0.7853658536585366
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.9096045197740112,
+      "recall": 0.7853658536585366,
+      "f1-score": 0.8429319371727748,
+      "support": 205.0
+    },
+    "parkinson": {
+      "precision": 0.8411552346570397,
+      "recall": 0.9357429718875502,
+      "f1-score": 0.8859315589353612,
+      "support": 249.0
+    },
+    "accuracy": 0.8678414096916299,
+    "macro avg": {
+      "precision": 0.8753798772155255,
+      "recall": 0.8605544127730433,
+      "f1-score": 0.864431748054068,
+      "support": 454.0
+    },
+    "weighted avg": {
+      "precision": 0.8720629515050113,
+      "recall": 0.8678414096916299,
+      "f1-score": 0.8665154301659115,
+      "support": 454.0
+    }
+  }
+}

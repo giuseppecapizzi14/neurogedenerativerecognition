@@ -23,15 +23,15 @@ data:
     report_speaker_metrics: true # Riporta metriche aggregate per speaker
 
 model:
-  dropout: 0.42                           # DROPOUT GLOBALE INTERMEDIO: via di mezzo per target 80%
+  dropout: 0.8                             # AUMENTATO: WavLM più potente, serve più regolarizzazione
   branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                   # Usa waveform come richiesto
-    dropout: 0.6                          # Ripristinato: dropout CNN per 86% accuracy
+    dropout: 0.8                          # AUMENTATO: regolarizzazione più forte per WavLM
     batch_norm: true                      # Riabilitato per stabilità training
   mlp:
-    hidden_layers: [176, 88, 44]          # VIA DI MEZZO: 3 layer con dimensioni intermedie
-    dropout: 0.42                         # DROPOUT INTERMEDIO: tra 0.4 e 0.45
+    hidden_layers: [32]                    # RIDOTTO: da 36 a 32 neuroni per WavLM
+    dropout: 0.8                          # AUMENTATO: regolarizzazione più forte per WavLM
     class_weight: "balanced"               # Mantiene bilanciamento classi
   svm:
     kernel: "rbf"                          # RBF per pattern non-lineari complessi
@@ -59,10 +59,10 @@ features:
     jitter_shimmer: false                  # Disabilitato: richiede Parselmouth stabil  spectrogram:
     log: true
   transformers:
-    model_name: "facebook/wav2vec2-base-960h"        
+    model_name: "microsoft/wavlm-base"              # WavLM Base: test finale con config ottimizzata
     pooling: "mean"                             # "cls" | "mean"
-    freeze_backbone: false                      # Unfreeze per fine-tuning completo
-    max_length: 32000                          # Ridotto da 48000 per dataset piccolo (2s * 16kHz)
+    freeze_backbone: true                       # FREEZE: previene overfitting + velocizza training
+    max_length: 12000                          # ULTRA-VELOCE: 0.75s * 16kHz - massima velocità GTX 1080
     layer: -1                                  # Usa ultimo layer per rappresentazioni migliori
                                                 # Modelli disponibili:
                                                 # - facebook/wav2vec2-base-960h
@@ -73,13 +73,13 @@ features:
                                                 # - microsoft/wavlm-base
 
 training:
-  epochs: 13                               # EPOCHE INTERMEDIE: via di mezzo tra 12 e 14
-  batch_size: 38                           # BATCH SIZE INTERMEDIO: tra 36 e 40
-  lr: 0.00075                              # LEARNING RATE INTERMEDIO: tra 0.0007 e 0.0008
-  max_lr: 0.00225                          # MAX LR INTERMEDIO: tra 0.0021 e 0.0024
-  min_lr: 0.000075                         # MIN LR INTERMEDIO: tra 0.00007 e 0.00008
-  warmup_ratio: 0.155                      # WARMUP INTERMEDIO: tra 0.15 e 0.16
-  weight_decay: 0.00135                    # WEIGHT DECAY INTERMEDIO: tra 0.0012 e 0.0015
+  epochs: 3                               # VIA DI MEZZO: tra 4 (95%) e 2 (69%) epoche
+  batch_size: 80                           # MASSIMO: sfrutta al massimo GTX 1080 (8GB VRAM)
+  lr: 0.0005                              # VIA DI MEZZO: tra 0.0008 (95%) e 0.0003 (69%)
+  max_lr: 0.001                           # VIA DI MEZZO: tra 0.0015 (95%) e 0.0006 (69%)
+  min_lr: 0.00008                         # VIA DI MEZZO: tra 0.0001 (95%) e 0.00005 (69%)
+  warmup_ratio: 0.12                      # VIA DI MEZZO: tra 0.1 (95%) e 0.15 (69%)
+  weight_decay: 0.035                     # VIA DI MEZZO: tra 0.02 (95%) e 0.05 (69%)
   checkpoint_dir: checkpoints/
   model_name: best_model
   device: "cuda"                           # CUDA esplicito per massima velocità
@@ -87,6 +87,6 @@ training:
   best_metric_lower_is_better: false
   seed: 42  
   # Validation Split ottimizzato
-  val_split: 0.25                          # VALIDATION SPLIT BILANCIATO: validazione robusta ma non eccessiva
+  val_split: 0.3                          # VIA DI MEZZO: tra 0.25 (95%) e 0.35 (69%)
 
 plot: [accuracy, loss]

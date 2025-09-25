@@ -1,0 +1,50 @@
+{
+  "model_name": "Transformers+MLP_facebook_hubert-base-ls960",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "transformer_model": "facebook/hubert-base-ls960",
+    "hidden_layers": [
+      32
+    ],
+    "dropout": 0.8,
+    "learning_rate": 0.001,
+    "epochs": 3,
+    "batch_size": 80,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.8571428571428571,
+    "precision": 0.8625734083730034,
+    "recall": 0.8571428571428571,
+    "f1_score": 0.8580277041380642,
+    "sensitivity": 0.8395522388059702,
+    "specificity": 0.8823529411764706
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.7932692307692307,
+      "recall": 0.8823529411764706,
+      "f1-score": 0.8354430379746836,
+      "support": 187.0
+    },
+    "parkinson": {
+      "precision": 0.9109311740890689,
+      "recall": 0.8395522388059702,
+      "f1-score": 0.8737864077669902,
+      "support": 268.0
+    },
+    "accuracy": 0.8571428571428571,
+    "macro avg": {
+      "precision": 0.8521002024291497,
+      "recall": 0.8609525899912204,
+      "f1-score": 0.854614722870837,
+      "support": 455.0
+    },
+    "weighted avg": {
+      "precision": 0.8625734083730034,
+      "recall": 0.8571428571428571,
+      "f1-score": 0.8580277041380642,
+      "support": 455.0
+    }
+  }
+}

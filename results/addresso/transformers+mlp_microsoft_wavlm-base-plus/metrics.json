@@ -1,0 +1,50 @@
+{
+  "model_name": "Transformers+MLP_microsoft_wavlm-base-plus",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "transformer_model": "microsoft/wavlm-base-plus",
+    "hidden_layers": [
+      32
+    ],
+    "dropout": 0.8,
+    "learning_rate": 0.001,
+    "epochs": 3,
+    "batch_size": 80,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.8373626373626374,
+    "precision": 0.8585125512785087,
+    "recall": 0.8373626373626374,
+    "f1_score": 0.838613596798664,
+    "sensitivity": 0.7723880597014925,
+    "specificity": 0.93048128342246
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.7404255319148936,
+      "recall": 0.93048128342246,
+      "f1-score": 0.8246445497630331,
+      "support": 187.0
+    },
+    "parkinson": {
+      "precision": 0.9409090909090909,
+      "recall": 0.7723880597014925,
+      "f1-score": 0.8483606557377049,
+      "support": 268.0
+    },
+    "accuracy": 0.8373626373626374,
+    "macro avg": {
+      "precision": 0.8406673114119922,
+      "recall": 0.8514346715619763,
+      "f1-score": 0.836502602750369,
+      "support": 455.0
+    },
+    "weighted avg": {
+      "precision": 0.8585125512785087,
+      "recall": 0.8373626373626374,
+      "f1-score": 0.838613596798664,
+      "support": 455.0
+    }
+  }
+}

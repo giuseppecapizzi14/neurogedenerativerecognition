@@ -1,0 +1,50 @@
+{
+  "model_name": "Transformers+MLP_ALM_hubert-base-audioset",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "transformer_model": "ALM/hubert-base-audioset",
+    "hidden_layers": [
+      36
+    ],
+    "dropout": 0.75,
+    "learning_rate": 0.001,
+    "epochs": 3,
+    "batch_size": 80,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.865934065934066,
+    "precision": 0.8656734449570964,
+    "recall": 0.865934065934066,
+    "f1_score": 0.8657651166700069,
+    "sensitivity": 0.8917910447761194,
+    "specificity": 0.8288770053475936
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.842391304347826,
+      "recall": 0.8288770053475936,
+      "f1-score": 0.8355795148247979,
+      "support": 187.0
+    },
+    "parkinson": {
+      "precision": 0.8819188191881919,
+      "recall": 0.8917910447761194,
+      "f1-score": 0.8868274582560297,
+      "support": 268.0
+    },
+    "accuracy": 0.865934065934066,
+    "macro avg": {
+      "precision": 0.8621550617680089,
+      "recall": 0.8603340250618565,
+      "f1-score": 0.8612034865404138,
+      "support": 455.0
+    },
+    "weighted avg": {
+      "precision": 0.8656734449570964,
+      "recall": 0.865934065934066,
+      "f1-score": 0.8657651166700069,
+      "support": 455.0
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "model_name": "Transformers+MLP_facebook_wav2vec2-base-960h",
+  "dataset_name": "Addresso",
+  "model_settings": {
+    "transformer_model": "facebook/wav2vec2-base-960h",
+    "hidden_layers": [
+      96,
+      48
+    ],
+    "dropout": 0.5,
+    "learning_rate": 0.0015,
+    "epochs": 8,
+    "batch_size": 48,
+    "device": "cuda"
+  },
+  "metrics": {
+    "accuracy": 0.8593406593406593,
+    "precision": 0.8821902890656492,
+    "recall": 0.8593406593406593,
+    "f1_score": 0.8529820369857989,
+    "sensitivity": 0.9925373134328358,
+    "specificity": 0.6684491978609626
+  },
+  "classification_report": {
+    "healthy": {
+      "precision": 0.984251968503937,
+      "recall": 0.6684491978609626,
+      "f1-score": 0.7961783439490446,
+      "support": 187.0
+    },
+    "parkinson": {
+      "precision": 0.8109756097560976,
+      "recall": 0.9925373134328358,
+      "f1-score": 0.8926174496644296,
+      "support": 268.0
+    },
+    "accuracy": 0.8593406593406593,
+    "macro avg": {
+      "precision": 0.8976137891300173,
+      "recall": 0.8304932556468991,
+      "f1-score": 0.8443978968067372,
+      "support": 455.0
+    },
+    "weighted avg": {
+      "precision": 0.8821902890656492,
+      "recall": 0.8593406593406593,
+      "f1-score": 0.8529820369857989,
+      "support": 455.0
+    }
+  }
+}
