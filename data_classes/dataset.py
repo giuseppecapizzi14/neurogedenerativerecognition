@@ -11,6 +11,20 @@ from torch.utils.data import Dataset
 from torchaudio.transforms import Resample, MelSpectrogram
 
 
+# Funzioni per label extraction (sostituiscono le lambda per compatibilità multiprocessing)
+def extract_ita_pvs_label(filepath: str) -> str:
+    """Estrae label per dataset Ita-PVS"""
+    return "healthy" if "Healthy Control" in filepath else "parkinson"
+
+def extract_neurovoz_label(filepath: str) -> str:
+    """Estrae label per dataset Neurovoz"""
+    return "healthy" if os.path.basename(filepath).startswith("HC_") else "parkinson"
+
+def extract_addresso_label(filepath: str) -> str:
+    """Estrae label per dataset Addresso"""
+    return "cn" if "/cn/" in filepath or "\\cn\\" in filepath else "ad"
+
+
 class Sample(TypedDict):
     waveform: Tensor
     label: int
@@ -70,17 +84,17 @@ class AudioDataset(Dataset[Sample]):
         "Ita-PVS": {
             "label_dict": {"healthy": 0, "parkinson": 1},
             "file_pattern": ".wav",
-            "label_extractor": lambda filepath: "healthy" if "Healthy Control" in filepath else "parkinson"
+            "label_extractor": extract_ita_pvs_label  # Sostituita lambda con funzione
         },
         "Neurovoz": {
             "label_dict": {"healthy": 0, "parkinson": 1},
             "file_pattern": ".wav", 
-            "label_extractor": lambda filepath: "healthy" if os.path.basename(filepath).startswith("HC_") else "parkinson"
+            "label_extractor": extract_neurovoz_label  # Sostituita lambda con funzione
         },
         "Addresso": {
             "label_dict": {"cn": 0, "ad": 1},  # cn=controlli, ad=alzheimer
             "file_pattern": ".wav",
-            "label_extractor": lambda filepath: "cn" if "/cn/" in filepath or "\\cn\\" in filepath else "ad",
+            "label_extractor": extract_addresso_label,  # Sostituita lambda con funzione
             "has_predefined_splits": True,  # Indica che train/test sono già separati
             "has_segmentation": True  # Indica che usa file CSV per segmentazione
         }

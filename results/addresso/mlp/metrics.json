@@ -3,47 +3,47 @@
   "dataset_name": "Addresso",
   "model_settings": {
     "hidden_layers": [
-      256,
-      128,
-      64
+      176,
+      88,
+      44
     ],
-    "dropout": 0.2,
-    "learning_rate": 0.002,
-    "epochs": 15,
-    "batch_size": 32
+    "dropout": 0.42,
+    "learning_rate": 0.00225,
+    "epochs": 13,
+    "batch_size": 38
   },
   "metrics": {
-    "accuracy": 0.6131868131868132,
-    "precision": 0.7439666838218083,
-    "recall": 0.6131868131868132,
-    "f1_score": 0.5637329552168262,
-    "sensitivity": 0.28270042194092826,
+    "accuracy": 0.8043956043956044,
+    "precision": 0.8456635313838704,
+    "recall": 0.8043956043956044,
+    "f1_score": 0.8001062744268366,
+    "sensitivity": 0.6497890295358649,
     "specificity": 0.9724770642201835
   },
   "classification_report": {
     "healthy": {
-      "precision": 0.5549738219895288,
+      "precision": 0.7186440677966102,
       "recall": 0.9724770642201835,
-      "f1-score": 0.7066666666666667,
+      "f1-score": 0.8265107212475633,
       "support": 218.0
     },
     "parkinson": {
-      "precision": 0.9178082191780822,
-      "recall": 0.28270042194092826,
-      "f1-score": 0.432258064516129,
+      "precision": 0.9625,
+      "recall": 0.6497890295358649,
+      "f1-score": 0.7758186397984886,
       "support": 237.0
     },
-    "accuracy": 0.6131868131868132,
+    "accuracy": 0.8043956043956044,
     "macro avg": {
-      "precision": 0.7363910205838056,
-      "recall": 0.6275887430805559,
-      "f1-score": 0.5694623655913978,
+      "precision": 0.8405720338983051,
+      "recall": 0.8111330468780242,
+      "f1-score": 0.8011646805230259,
       "support": 455.0
     },
     "weighted avg": {
-      "precision": 0.7439666838218083,
-      "recall": 0.6131868131868132,
-      "f1-score": 0.5637329552168262,
+      "precision": 0.8456635313838704,
+      "recall": 0.8043956043956044,
+      "f1-score": 0.8001062744268366,
       "support": 455.0
     }
   }
