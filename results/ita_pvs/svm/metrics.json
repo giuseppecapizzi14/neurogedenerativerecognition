@@ -2,46 +2,46 @@
   "model_name": "SVM",
   "dataset_name": "Ita-PVS",
   "model_settings": {
-    "C": 10.0,
-    "kernel": "linear",
-    "gamma": "scale",
+    "C": 0.2,
+    "kernel": "rbf",
+    "gamma": 0.002,
     "class_weight": "balanced",
-    "validation_loss": 0.056361742345853096,
-    "n_features": 147
+    "validation_loss": 0.18194727863993623,
+    "n_features": 58
   },
   "metrics": {
-    "accuracy": 0.9683544303797469,
-    "precision": 0.970464135021097,
-    "recall": 0.9683544303797469,
-    "f1_score": 0.9684373891224497,
-    "sensitivity": 0.9431818181818182,
-    "specificity": 1.0
+    "accuracy": 0.8888888888888888,
+    "precision": 0.8992673992673993,
+    "recall": 0.8888888888888888,
+    "f1_score": 0.8891941391941394,
+    "sensitivity": 0.8333333333333334,
+    "specificity": 0.9583333333333334
   },
   "classification_report": {
     "healthy": {
-      "precision": 0.9333333333333333,
-      "recall": 1.0,
-      "f1-score": 0.9655172413793104,
-      "support": 70.0
+      "precision": 0.8214285714285714,
+      "recall": 0.9583333333333334,
+      "f1-score": 0.8846153846153846,
+      "support": 72.0
     },
     "parkinson": {
-      "precision": 1.0,
-      "recall": 0.9431818181818182,
-      "f1-score": 0.9707602339181286,
-      "support": 88.0
+      "precision": 0.9615384615384616,
+      "recall": 0.8333333333333334,
+      "f1-score": 0.8928571428571429,
+      "support": 90.0
     },
-    "accuracy": 0.9683544303797469,
+    "accuracy": 0.8888888888888888,
     "macro avg": {
-      "precision": 0.9666666666666667,
-      "recall": 0.9715909090909092,
-      "f1-score": 0.9681387376487195,
-      "support": 158.0
+      "precision": 0.8914835164835164,
+      "recall": 0.8958333333333334,
+      "f1-score": 0.8887362637362637,
+      "support": 162.0
     },
     "weighted avg": {
-      "precision": 0.970464135021097,
-      "recall": 0.9683544303797469,
-      "f1-score": 0.9684373891224497,
-      "support": 158.0
+      "precision": 0.8992673992673993,
+      "recall": 0.8888888888888888,
+      "f1-score": 0.8891941391941394,
+      "support": 162.0
     }
   }
 }

@@ -2,7 +2,7 @@ data:
   train_ratio: 0.85                       # Ottimizzato per dataset piccolo: più dati per training
   test_ratio: 0.15                        # Meno dati per test, più per training
   data_dir: dataset
-  dataset_name: "Addresso"                # Cambiato per testare Addresso
+  dataset_name: "Ita-PVS"                # Cambiato per testare Addresso
   target_sample_rate: 16000
   target_sr: 16000                        # Alias per compatibilità
   fixed_duration: 5.0                     # Durata fissa per segmenti audio
@@ -24,7 +24,7 @@ data:
 
 model:
   dropout: 0.8                             # AUMENTATO: WavLM più potente, serve più regolarizzazione
-  branch: "transformers_mlp"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
+  branch: "classical_svm"     # "classical_svm" | "classical_mlp" | "cnn" | "transformers_mlp"
   cnn:
     in_type: "waveform"                   # Usa waveform come richiesto
     dropout: 0.8                          # AUMENTATO: regolarizzazione più forte per WavLM
